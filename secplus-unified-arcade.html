@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SY0-701 Unified Practice Arcade</title>
+<style>
+  :root{
+    --bg:#070c12;
+    --panel:#101923;
+    --panel-2:#0c141c;
+    --line:#1e2c39;
+    --accent:#57c7d4;
+    --accent-dim:#2f5c63;
+    --ok:#8bd17c;
+    --warn:#e8b34c;
+    --danger:#ef5a68;
+    --text:#dce6ef;
+    --text-dim:#88a0b3;
+    --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: -apple-system, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:34px 34px;
+    background-attachment:fixed;
+    background-color:var(--bg);
+    transition:background-color .2s ease, color .2s ease;
+  }
+  body.light{
+    --bg:#eef2f6;
+    --panel:#ffffff;
+    --panel-2:#f4f7fa;
+    --line:#d7dee5;
+    --text:#1b2733;
+    --text-dim:#5b6b7a;
+  }
+  body.light button.btn.primary{color:#ffffff;}
+  #app{max-width:1000px;margin:0 auto;padding:18px 16px 60px;}
+
+  .console-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px;}
+  .console-head h1{font-family:var(--mono);font-size:18px;letter-spacing:0.5px;color:var(--accent);margin:0;font-weight:600;}
+  .console-head h1 span{color:var(--text-dim);font-weight:400;}
+  .breadcrumb{font-family:var(--mono);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:14px;}
+  .breadcrumb button{background:none;border:none;color:var(--warn);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0;}
+  .breadcrumb button:hover{text-decoration:underline;}
+  .gear-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--text-dim);font-family:var(--mono);
+    font-size:12px;padding:6px 10px;cursor:pointer;}
+  .gear-btn:hover{border-color:var(--accent-dim);color:var(--text);}
+
+  .settings-box{background:var(--panel);border:1px solid var(--accent-dim);max-width:460px;width:100%;padding:26px 24px;}
+  .settings-box h3{font-family:var(--mono);font-size:15px;color:var(--accent);margin:0 0 4px;}
+  .settings-box .sec-label{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);letter-spacing:0.5px;
+    margin:18px 0 8px;text-transform:uppercase;}
+  .mode-row{display:flex;gap:8px;}
+  .mode-row button{flex:1;font-family:var(--mono);font-size:13px;padding:9px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--text);cursor:pointer;}
+  .mode-row button.active{border-color:var(--accent);color:var(--accent);}
+  .swatch-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .swatch{width:34px;height:34px;border:2px solid var(--line);cursor:pointer;border-radius:50%;}
+  .swatch.active{border-color:var(--text);}
+  .color-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px;}
+  .color-row input[type=color]{width:40px;height:28px;border:1px solid var(--line);background:none;cursor:pointer;padding:0;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:480px){.grid{grid-template-columns:1fr;}}
+  .node{position:relative;background:var(--panel);border:1px solid var(--line);padding:20px 18px;cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;}
+  .node:hover{border-color:var(--accent-dim);}
+  .node:active{transform:scale(0.99);}
+  .node::before,.node::after{content:"";position:absolute;width:10px;height:10px;}
+  .node::before{top:-1px;left:-1px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);}
+  .node::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);}
+  .node .tag{font-family:var(--mono);font-size:10.5px;color:var(--accent);letter-spacing:1px;}
+  .node h2{font-family:var(--mono);font-size:16.5px;margin:8px 0 6px;color:var(--text);}
+  .node p{margin:0;font-size:13px;color:var(--text-dim);line-height:1.5;}
+  .stat-line{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);margin-top:10px;}
+  .intro{font-size:14px;color:var(--text-dim);line-height:1.6;margin:0 0 16px;max-width:720px;}
+  .intro b{color:var(--text);}
+
+  .domain-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;font-family:var(--mono);font-size:12.5px;}
+  .domain-bar select{background:var(--panel-2);color:var(--text);border:1px solid var(--line);font-family:var(--mono);
+    font-size:12.5px;padding:7px 10px;}
+  .domain-bar .k{color:var(--text-dim);}
+
+  button.btn{font-family:var(--mono);background:var(--panel-2);color:var(--text);border:1px solid var(--line);
+    padding:9px 16px;font-size:13px;cursor:pointer;}
+  button.btn:hover{border-color:var(--accent-dim);}
+  button.btn.primary{background:var(--accent);color:#04191d;border-color:var(--accent);font-weight:600;}
+  button.btn.primary:hover{filter:brightness(1.08);}
+  button.btn.ghost{background:transparent;}
+  button.btn:disabled{opacity:0.4;cursor:default;}
+
+  .hud{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:13px;
+    background:var(--panel-2);border:1px solid var(--line);padding:10px 14px;margin-bottom:16px;}
+  .hud .k{color:var(--text-dim);margin-right:4px;}
+  .hud .v{color:var(--warn);font-weight:600;}
+  .lives{display:flex;gap:5px;}
+  .life{width:12px;height:12px;background:var(--danger);}
+  .life.dead{background:#2a1418;}
+  .timerbar-wrap{flex:1;min-width:120px;height:8px;background:var(--panel);border:1px solid var(--line);overflow:hidden;}
+  .timerbar{height:100%;background:var(--accent);width:100%;transition:width .1s linear, background .2s;}
+
+  .qcard{background:var(--panel);border:1px solid var(--line);padding:24px 20px;text-align:center;}
+  .qcard .term{font-family:var(--mono);font-size:26px;color:var(--accent);letter-spacing:0.5px;margin-bottom:4px;line-height:1.3;}
+  .qcard .sub{font-size:12px;color:var(--text-dim);font-family:var(--mono);}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;}
+  @media (max-width:560px){.choices{grid-template-columns:1fr;}}
+  .choice{background:var(--panel-2);border:1px solid var(--line);padding:13px 14px;text-align:left;font-size:13.5px;
+    cursor:pointer;color:var(--text);line-height:1.4;}
+  .choice:hover{border-color:var(--accent-dim);}
+  .choice.correct{border-color:var(--ok);background:color-mix(in srgb, var(--ok) 18%, var(--panel));color:var(--ok);}
+  .choice.wrong{border-color:var(--danger);background:color-mix(in srgb, var(--danger) 18%, var(--panel));color:var(--danger);}
+  .choice.disabled{pointer-events:none;}
+  .feedback{margin-top:14px;font-family:var(--mono);font-size:13px;min-height:18px;}
+  .feedback.ok{color:var(--ok);}
+  .feedback.bad{color:var(--danger);}
+  .endscreen{text-align:center;padding:40px 20px;}
+  .endscreen .big{font-family:var(--mono);font-size:40px;color:var(--accent);}
+
+  .match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:600px){.match-grid{grid-template-columns:repeat(2,1fr);}}
+  .mcard{aspect-ratio:1/0.85;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;
+    justify-content:center;text-align:center;padding:8px;cursor:pointer;font-size:11.5px;line-height:1.3;color:var(--text);}
+  .mcard.term{font-family:var(--mono);font-size:14px;color:var(--accent);}
+  .mcard.hidden{background:repeating-linear-gradient(45deg,var(--panel) 0 6px, var(--panel-2) 6px 12px);color:transparent;}
+  .mcard.matched{border-color:var(--ok);opacity:0.35;cursor:default;}
+  .mcard.wrongflash{border-color:var(--danger);}
+
+  .wheel-wrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin-bottom:16px;}
+  #wheelCanvas{background:var(--panel);border:1px solid var(--line);}
+  .spin-col{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .phrase{font-family:var(--mono);font-size:18px;letter-spacing:2px;text-align:center;line-height:1.9;word-break:break-word;
+    background:var(--panel);border:1px solid var(--line);padding:18px 14px;margin-bottom:14px;}
+  .kb{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:560px;margin:0 auto;}
+  .kb button{width:34px;height:34px;font-family:var(--mono);font-size:14px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--text);cursor:pointer;}
+  .kb button:disabled{opacity:0.25;cursor:default;}
+  .kb button.hit{border-color:var(--ok);color:var(--ok);}
+  .kb button.miss{border-color:var(--danger);color:var(--danger);}
+  .strikes{display:flex;gap:5px;}
+  .strike{width:20px;height:20px;border:1px solid var(--danger);display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:12px;color:var(--panel);}
+  .strike.on{background:var(--danger);color:#fff;}
+  .clue-hint{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;margin-top:-6px;margin-bottom:10px;}
+
+  .jcat-row{display:grid;gap:6px;margin-bottom:6px;}
+  .jcell{background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    padding:16px 6px;cursor:pointer;font-family:var(--mono);}
+  .jcat{background:var(--panel);color:var(--accent);font-size:11.5px;text-align:center;padding:10px 4px;font-weight:600;line-height:1.3;}
+  .jval{color:var(--ok);font-size:18px;}
+  .jcell.used{background:transparent;border-color:var(--panel);color:transparent;cursor:default;}
+  .clue-modal{position:fixed;inset:0;background:rgba(4,7,10,0.88);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:50;}
+  .clue-box{background:var(--panel);border:1px solid var(--accent-dim);max-width:560px;width:100%;padding:28px 24px;}
+  .clue-box .cat{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:14px;}
+  .clue-box .cluetext{font-size:16.5px;line-height:1.6;margin-bottom:20px;}
+  .clue-box input{width:100%;padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    font-family:var(--mono);font-size:14px;margin-bottom:12px;}
+  .clue-box .answer-reveal{font-family:var(--mono);color:var(--accent);margin-bottom:14px;font-size:15px;}
+  .row-gap{display:flex;gap:10px;flex-wrap:wrap;}
+  .score-strip{font-family:var(--mono);font-size:14px;color:var(--accent);margin-bottom:12px;}
+
+  /* sequence lab */
+  .seq-pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+  .seq-chip{background:var(--panel-2);border:1px solid var(--line);padding:10px 14px;font-size:13.5px;cursor:pointer;}
+  .seq-chip:hover{border-color:var(--accent-dim);}
+  .seq-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+  .seq-row{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:10px 14px;font-size:13.5px;}
+  .seq-row .num{font-family:var(--mono);color:var(--text-dim);min-width:20px;}
+  .seq-row.correct{border-color:var(--ok);}
+  .seq-row.wrong{border-color:var(--danger);}
+  .seq-row .correction{font-family:var(--mono);font-size:11.5px;color:var(--warn);margin-left:auto;}
+
+  /* placement lab */
+  .zones{display:grid;gap:10px;margin-bottom:20px;}
+  .zone-box{background:var(--panel);border:1px dashed var(--line);padding:14px;min-height:90px;}
+  .zone-box.flash{border-color:var(--danger);}
+  .zone-title{font-family:var(--mono);font-size:12px;color:var(--accent);margin-bottom:8px;}
+  .zone-items{display:flex;flex-wrap:wrap;gap:6px;}
+  .placed-chip{background:color-mix(in srgb, var(--ok) 18%, var(--panel));border:1px solid var(--ok);color:var(--ok);padding:6px 10px;font-size:12px;}
+  .place-pool{display:flex;flex-wrap:wrap;gap:8px;}
+  .place-chip{background:var(--panel-2);border:1px solid var(--line);padding:9px 13px;font-size:13px;cursor:pointer;}
+  .place-chip:hover{border-color:var(--accent-dim);}
+  .place-chip.selected{border-color:var(--warn);color:var(--warn);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   DOMAIN TERM BANK — 5 main SY0-701 exam domains + 15 PBQ subdomains
+   kept as two distinct groups, never merged into one flat list
+   ============================================================ */
+const MAIN_DOMAINS = {
+  gsc:"1.0 General Security Concepts",
+  tvm:"2.0 Threats, Vulnerabilities & Mitigations",
+  arch:"3.0 Security Architecture",
+  ops:"4.0 Security Operations",
+  gov:"5.0 Security Program Mgmt & Oversight"
+};
+const PBQ_DOMAINS = {
+  rag:"Secure AI / RAG Configuration", zta:"Zero Trust Architecture", pki:"PKI & Cryptography",
+  lnx:"Linux Breach Response", bcdr:"BCDR & Recovery", siem:"SIEM & SOAR",
+  acl:"Firewall ACL Rules", fw:"Advanced Firewall Config", ids:"IDS/IPS Alert Analysis",
+  ir:"Incident Response Phases", log:"Security Log Analysis", netdiag:"Network Security Diagram",
+  subnet:"Subnetting & VLSM", hard:"System Hardening", wifi:"Wireless AP Configuration"
+};
+const DOMAINS = { ...MAIN_DOMAINS, ...PBQ_DOMAINS };
+
+const PBQ_RAW = [
+["rag","Prompt Injection","An attacker crafts input that manipulates an LLM into ignoring its instructions or bypassing safety guardrails."],
+["rag","Data Poisoning","An attacker corrupts training or retrieval-source data so the model learns or surfaces malicious or false content."],
+["rag","Model Inversion","An attacker queries a model repeatedly to reconstruct or infer sensitive data it was trained on."],
+["rag","Guardrails","Input and output filters, content policies, and system prompts that constrain what a GenAI system will do."],
+["rag","Retrieval-Augmented Generation","Combines an LLM with a retrieval step over an external knowledge base to ground answers in current, trusted data."],
+["rag","Output Sanitization","Filtering or encoding model output before it reaches downstream systems, preventing injected commands or scripts from executing."],
+["rag","Least Privilege for AI Agents","Restricting an AI agent's tool and API access to only what its current task requires."],
+["rag","Vector Store Poisoning","Injecting malicious documents into the embeddings database so RAG retrieval later surfaces attacker-controlled content."],
+["rag","Agent Sandboxing","Isolating an AI agent's code execution or tool use so a hijacked session cannot reach the wider environment."],
+["rag","Human-in-the-loop Approval","Requiring a person to approve high-risk actions before an autonomous AI agent executes them."],
+
+["zta","Zero Trust","The principle of never trusting a request implicitly based on network location, verifying every time instead."],
+["zta","ZTNA","Brokered, identity- and context-based access to applications that replaces a traditional perimeter VPN."],
+["zta","Micro-segmentation","Dividing a network into small, isolated zones so a breach in one cannot easily spread laterally."],
+["zta","CASB","A control point enforcing policy and visibility between users and cloud services."],
+["zta","PAM","Vaulting, monitoring, and time-limiting the use of privileged administrator credentials."],
+["zta","Continuous Authentication","Ongoing verification of a session's trust level throughout its life, not just at initial login."],
+["zta","JIT Access","Granting elevated privileges only for a short, limited window when actually needed."],
+["zta","Policy Enforcement Point","The control point that actually allows or blocks a request based on a policy decision."],
+["zta","Policy Decision Point","The component that evaluates identity, device, and risk context to decide whether access should be granted."],
+["zta","Minimized Implicit Trust","The goal of Zero Trust is to shrink any area where trust is assumed rather than continuously verified."],
+
+["pki","Root CA","The self-signed, offline trust anchor at the very top of a certificate chain."],
+["pki","Intermediate CA","A CA certificate signed by the root, used to issue day-to-day certificates while the root stays offline."],
+["pki","Leaf Certificate","The certificate issued to a specific server or user, signed by an intermediate CA."],
+["pki","Chain Validation","Verifying trust from the leaf certificate up to a trusted root, checking each signature along the way."],
+["pki","CRL","A downloaded list identifying certificates that have been revoked."],
+["pki","OCSP","A real-time online check of a single certificate's revocation status."],
+["pki","Revocation Trigger","A certificate should be flagged for revocation when its private key is compromised or it was mis-issued."],
+["pki","Symmetric vs Asymmetric","Symmetric ciphers like AES are fast for bulk data; asymmetric ciphers like RSA/ECC handle key exchange and signatures."],
+["pki","Perfect Forward Secrecy","Ephemeral key exchange such as DHE or ECDHE keeps past sessions safe even if a long-term key is later compromised."],
+["pki","Hash Selection","Use SHA-2 or SHA-3 for integrity checks; avoid MD5 and SHA-1 in security-sensitive contexts."],
+
+["lnx","sshd_config Hardening","Disable root login and password authentication, allowing only key-based SSH access."],
+["lnx","fail2ban","Watches logs and temporarily bans source IPs after repeated failed login attempts."],
+["lnx","UFW Default Policy","Set default deny on incoming traffic, then explicitly allow only the ports actually required."],
+["lnx","Change Interdependency","Disabling password authentication before every admin has a working SSH key can lock everyone out."],
+["lnx","Contain Before Eradicate","Isolate a breached host from the network before removing malware, to stop further lateral movement."],
+["lnx","Credential Rotation","Any credential that may have been exposed during a breach must be rotated, not only the obviously compromised one."],
+["lnx","Persistence Check","Review cron jobs, authorized_keys files, and startup services for attacker-planted backdoors."],
+["lnx","Post-hardening Verification","Confirm fail2ban and UFW logs show blocked attempts before considering remediation complete."],
+
+["bcdr","RTO","The maximum acceptable downtime before a service must be restored."],
+["bcdr","RPO","The maximum acceptable data loss measured in time, which drives how often backups must run."],
+["bcdr","Hot Site","A fully equipped, ready-to-run duplicate site giving near-zero RTO at the highest cost."],
+["bcdr","Warm Site","A partially configured site with some hardware and data, balancing cost against recovery speed."],
+["bcdr","Cold Site","A basic facility with power and space but no ready systems, cheapest but slowest to activate."],
+["bcdr","Backup Frequency and RPO","Backups must run at least as often as the RPO requires, e.g. a 4-hour RPO needs backups every 4 hours or less."],
+["bcdr","Budget Trade-off","A tighter RTO/RPO requires greater investment in redundant infrastructure and site readiness."],
+["bcdr","Recovery Step Order","Declare the disaster, notify the team, assess damage, fail over, restore data, validate, then resume operations."],
+
+["siem","Sigma Rule","A vendor-agnostic, generic signature format for writing SIEM detection logic."],
+["siem","MITRE ATT&CK","A framework mapping observed adversary behavior to standardized tactics and techniques."],
+["siem","Earliest Containment Point","The earliest stage in an attack chain where isolating or blocking would have prevented the most damage."],
+["siem","SOAR Playbook","Automates response actions, such as isolating a host or disabling an account, triggered by a SIEM alert."],
+["siem","Ransomware Kill Chain","Initial access, execution, persistence, privilege escalation, lateral movement, collection, exfiltration, then impact."],
+["siem","Alert Correlation","Combining multiple low-confidence signals from different sources into one higher-confidence incident."],
+["siem","Automated Containment","A SOAR action that isolates an infected endpoint from the network without waiting for human approval."],
+["siem","Rule Tuning","Adjusting a detection rule's thresholds to cut down on alerts for expected, benign behavior."],
+
+["acl","Least Privilege ACL","Allow only the specific ports and protocols actually required, denying everything else by default."],
+["acl","Restricting Database Access","Only the application server's specific IP should be able to reach the database port, never the whole internet."],
+["acl","Rule Order","Firewall ACLs are processed top-down; the first rule that matches a packet wins."],
+["acl","Implicit Deny-all","Any traffic not explicitly allowed by an earlier rule is denied by default at the end of the list."],
+["acl","Allowing Web Traffic","Permit inbound TCP 80 and 443 to the web server as needed for HTTP and HTTPS."],
+["acl","Tiering the Database","Placing the database on its own subnet, unreachable directly from the internet, limits exposure."],
+
+["fw","Rule Components","Direction, protocol, source CIDR, destination CIDR, port, and action together make up one firewall rule."],
+["fw","CIDR Notation","A block like 192.168.1.0/24 represents a contiguous range of 256 addresses."],
+["fw","Direction","An inbound rule governs traffic entering the network; an outbound rule governs traffic leaving it."],
+["fw","Specific-to-general Ordering","More specific rules should be placed above more general ones so they are evaluated first."],
+["fw","Implicit Deny-all Policy","The final rule of any ruleset denies anything that was not explicitly permitted above it."],
+["fw","Stateful Firewalls","Automatically allow return traffic for connections already established, unlike a stateless firewall."],
+
+["ids","True Positive","An alert correctly identifies real malicious activity."],
+["ids","False Positive","An alert fires on benign activity that was mistakenly flagged as malicious."],
+["ids","False Negative","Malicious activity occurs but no alert fires — often the most dangerous outcome."],
+["ids","True Negative","Benign activity correctly produces no alert at all."],
+["ids","Snort alert Action","Generates an alert but still allows the matching packet through, an IDS-style behavior."],
+["ids","Snort drop Action","Silently discards the matching packet inline, an IPS-style blocking action."],
+["ids","Snort reject Action","Blocks the matching packet and sends a reset or unreachable response to both endpoints."],
+["ids","Choosing an Inline Action","Only use blocking actions like drop or reject when confidence in a rule is high, to avoid false-positive outages."],
+
+["ir","Preparation","Building tools, training staff, and writing plans before any incident occurs."],
+["ir","Identification","Detecting and confirming that a security incident has actually happened."],
+["ir","Containment","Limiting the spread and impact of an incident, short-term isolation followed by longer-term measures."],
+["ir","Eradication","Removing the root cause of an incident, such as malware or a backdoor, from every affected system."],
+["ir","Recovery","Restoring affected systems to normal operation while monitoring closely for recurrence."],
+["ir","Lessons Learned","The post-incident review used to improve tools, training, and plans for next time."],
+
+["log","Patient Zero","The first host in the timeline to show signs of compromise, often via a phishing click or drive-by download."],
+["log","Lateral Movement Signature","One host making unusual outbound connections or authentication attempts to several other internal hosts in quick succession."],
+["log","Clean Host Indicators","No anomalous outbound traffic, no unexpected new processes, and normal authentication patterns across the logs."],
+["log","Timestamp Correlation","Aligning log timestamps across hosts, accounting for time zone and clock skew, to reconstruct an accurate timeline."],
+["log","Beaconing Pattern","Regular, periodic outbound connections to the same external address, often indicating command-and-control traffic."],
+["log","Log Source Triage","Firewall, DNS, endpoint, and authentication logs each reveal a different piece of a compromise story."],
+
+["netdiag","Firewall Placement","Sits at the network perimeter, filtering traffic as it crosses between trust zones."],
+["netdiag","WAF Placement","Sits in front of web servers, typically in the DMZ, filtering Layer 7 HTTP(S) attacks."],
+["netdiag","IDS Placement","Monitors a span or mirror port on a segment, observing traffic without sitting inline or blocking it."],
+["netdiag","NAC Placement","Enforced at the network access edge, switch ports and wireless, checking device posture before granting entry."],
+["netdiag","SIEM Placement","Centralized in the SOC, aggregating logs from every layer rather than sitting inline in traffic paths."],
+["netdiag","DLP Placement","Deployed at egress points such as the email gateway, web proxy, or endpoint to catch sensitive data leaving."],
+["netdiag","Defense-in-depth","Layering several different types of controls so a single failure doesn't fully compromise the environment."],
+
+["subnet","Network ID","The first address of a subnet, found by ANDing the IP address with the subnet mask."],
+["subnet","Broadcast Address","The last address of a subnet, used to reach every host on that subnet at once."],
+["subnet","Usable Host Range","Every address between the network ID and the broadcast address, excluding both endpoints."],
+["subnet","/24 Subnet","Mask 255.255.255.0 — 256 total addresses, 254 usable hosts."],
+["subnet","/26 Subnet","Mask 255.255.255.192 — 64 total addresses, 62 usable hosts."],
+["subnet","/30 Subnet","Mask 255.255.255.252 — only 4 total addresses and 2 usable, common on point-to-point links."],
+["subnet","VLSM","Variable Length Subnet Masking assigns differently sized blocks to departments based on actual host-count needs."],
+["subnet","Host Count Formula","Usable hosts equal 2 raised to (32 minus the prefix length), minus 2."],
+
+["hard","Disabling Unnecessary Services","Reduces attack surface by turning off daemons and ports the system doesn't actually need."],
+["hard","PAM Password Policy","Enforces complexity, history, and lockout rules for local authentication on Linux."],
+["hard","SSH Key-only Authentication","Removing password login prevents brute-force and credential-stuffing attacks over SSH."],
+["hard","CIS Benchmarks","Vendor-neutral, consensus-based configuration baselines for hardening systems and applications."],
+["hard","Least Functionality","A hardened system should run only the services and software essential to its assigned role."],
+["hard","Sensitive File Permissions","Restricting permissions on files like /etc/shadow prevents unauthorized users from reading credential hashes."],
+["hard","Automatic Patching","Keeping packages current closes known vulnerabilities before an attacker can exploit them."],
+
+["wifi","WPA3","The current strongest Wi-Fi security standard, using SAE instead of the older WPA2 PSK handshake."],
+["wifi","802.1X","Port-based network access control that requires authentication before granting LAN or WLAN access."],
+["wifi","EAP-TLS","A certificate-based EAP method providing mutual authentication, considered the strongest common EAP type."],
+["wifi","Enterprise vs Personal Mode","Enterprise mode uses 802.1X and RADIUS with individual credentials; Personal mode uses one shared PSK."],
+["wifi","Disabling WPS","WPS PIN mode is brute-forceable and should be turned off on any enterprise access point."],
+["wifi","Hidden SSID","Hiding a network name provides negligible real security and is not a substitute for strong authentication."],
+["wifi","Management Frame Protection","Protects the wireless network against deauthentication and disassociation attacks."]
+].map(([domain,term,def],i)=>({id:"pbq"+i, domain, term, def, clue:def}));
+
+/* ---- Security+ acronym bank (Volume 1), classified into the 5 main domains below ---- */
+const ACR_RAW = [
+["AAA","Authentication, Authorization, and Accounting","Authentication is who you are, authorization is what you may do, accounting is what you did."],
+["ACL","Access Control List","Look for permit or deny entries applied to traffic or an object."],
+["AES","Advanced Encryption Standard","The modern symmetric cipher of choice over DES or RC4."],
+["AES-256","Advanced Encryption Standard 256-bit","The number is the key size, not a different cipher family."],
+["AH","Authentication Header","IPsec integrity and authentication without confidentiality; ESP adds encryption."],
+["AI","Artificial Intelligence","Broad human-like decision-making or generation; ML is the learning subset."],
+["AIS","Automated Indicator Sharing","Automated cyber-threat indicator exchange, often via STIX and TAXII."],
+["ALE","Annualized Loss Expectancy","ALE = SLE x ARO."],
+["AP","Access Point","A wireless connectivity device, not merely a home router."],
+["API","Application Programming Interface","Application-to-application integration or exposed endpoints."],
+["APT","Advanced Persistent Threat","Persistence, targeted objectives, and heavy resources."],
+["ARO","Annualized Rate of Occurrence","Frequency of a loss event per year; SLE is one-event cost."],
+["ARP","Address Resolution Protocol","Maps IPv4 to MAC; poisoning enables local man-in-the-middle attacks."],
+["ASLR","Address Space Layout Randomization","Memory-exploit mitigation commonly paired with DEP."],
+["ATT&CK","Adversarial Tactics, Techniques, and Common Knowledge","Describes attacker behavior, not a vulnerability score."],
+["AUP","Acceptable Use Policy","Defines permitted user behavior on company systems."],
+["AV","Antivirus","Traditional malware scanning; EDR adds deeper response."],
+["BASH","Bourne Again Shell","Linux/Unix shell scripting and command-line automation."],
+["BCP","Business Continuity Planning","Business-wide continuity; DRP focuses on IT restoration."],
+["BGP","Border Gateway Protocol","Route hijacking or internet-scale routing between ASes."],
+["BIA","Business Impact Analysis","Sets recovery priorities such as RTO and RPO."],
+["BIOS","Basic Input/Output System","Legacy firmware; UEFI is its modern replacement."],
+["BPA","Business Partners Agreement","Documents responsibilities between partner organizations."],
+["BPDU","Bridge Protocol Data Unit","Spanning Tree messages: loop prevention, root bridge, BPDU guard."],
+["BYOD","Bring Your Own Device","The employee owns the device, unlike COPE or CYOD."],
+["CA","Certificate Authority","Signs certificates; the RA verifies identity first."],
+["CAPTCHA","Completely Automated Public Turing Test to Tell Computers and Humans Apart","Filters bots, but is not multifactor authentication."],
+["CAR","Corrective Action Report","Documents an audit finding, cause, owner, and required fix."],
+["CASB","Cloud Access Security Broker","Policy enforcement between users and cloud apps; shadow IT visibility."],
+["CBC","Cipher Block Chaining","Needs an unpredictable IV; provides no authentication alone."],
+["CCMP","Counter Mode/CBC-MAC Protocol","AES-based encryption that replaced TKIP in WPA2."],
+["CCTV","Closed-circuit Television","Physical surveillance and deterrence cameras."],
+["CERT","Computer Emergency Response Team","A coordination team, not a certificate authority."],
+["CFB","Cipher Feedback","A stream-like block cipher mode for confidentiality."],
+["CHAP","Challenge Handshake Authentication Protocol","Challenge-response avoids sending the password directly; PAP sends it in the clear."],
+["CIA","Confidentiality, Integrity, Availability","The security triad: disclosure, unauthorized change, outage."],
+["CIO","Chief Information Officer","Executive role over information technology strategy."],
+["CIRT","Computer Incident Response Team","Investigates, contains, eradicates, and recovers from incidents."],
+["CMS","Content Management System","Publishes web content without editing source code, e.g. WordPress."],
+["COOP","Continuity of Operation Planning","Mission-essential function continuity, often for government."],
+["COPE","Corporate Owned, Personally Enabled","Company owns and manages the device but allows personal use."],
+["CP","Contingency Planning","Alternative procedures for continuing operations after disruption."],
+["CRC","Cyclic Redundancy Check","Detects accidental corruption, not intentional tampering."],
+["CRL","Certificate Revocation List","A downloaded list; OCSP checks one certificate online instead."],
+["CSO","Chief Security Officer","Executive role over overall security strategy."],
+["CSP","Cloud Service Provider","Delivers infrastructure, platform, or software cloud services."],
+["CSR","Certificate Signing Request","Begins enrollment; contains no CA signature yet."],
+["CSRF","Cross-site Request Forgery","Tricks a logged-in browser into an unwanted request."],
+["CSU","Channel Service Unit","Connects customer equipment to a digital WAN circuit."],
+["CTR","Counter Mode","Parallel block-cipher encryption; never reuse a nonce/counter."],
+["CTO","Chief Technology Officer","Executive role over technology direction."],
+["CVE","Common Vulnerability Enumeration","Identifies the flaw; CVSS scores its severity."],
+["CVSS","Common Vulnerability Scoring System","A 0.0-10.0 severity score."],
+["CYOD","Choose Your Own Device","Choice from an approved company device list."],
+["DAC","Discretionary Access Control","The object owner decides who gets access."],
+["DBA","Database Administrator","Role responsible for database systems."],
+["DDoS","Distributed Denial of Service","Many distributed sources overwhelm a target."],
+["DEP","Data Execution Prevention","Blocks code execution in data-only memory; paired with ASLR."],
+["DES","Data Encryption Standard","A legacy, now-weak symmetric block cipher."],
+["DHCP","Dynamic Host Configuration Protocol","Automatically leases IP addresses and settings, UDP ports 67/68."],
+["DHE","Diffie-Hellman Ephemeral","Temporary keys provide perfect forward secrecy."],
+["DKIM","DomainKeys Identified Mail","Cryptographic email signature verifying origin and integrity."],
+["DLL","Dynamic Link Library","Shared Windows code files; can be hijacked or side-loaded."],
+["DLP","Data Loss Prevention","Blocks sensitive data from leaving approved channels."],
+["DMARC","Domain-based Message Authentication, Reporting, and Conformance","Coordinates SPF and DKIM enforcement and reporting."],
+["DNAT","Destination Network Address Translation","Changes the destination address, e.g. forwarding to an internal server."],
+["DNS","Domain Name System","Resolves domain names to IP addresses; poisoning and tunneling risks."],
+["DoS","Denial of Service","One source disrupts availability; many sources means DDoS."],
+["DPO","Data Privacy Officer","Role responsible for privacy compliance."],
+["DRP","Disaster Recovery Plan","Restores IT systems and data; BCP covers the whole business."],
+["DSA","Digital Signature Algorithm","A public-key algorithm for digital signatures."],
+["DSL","Digital Subscriber Line","Broadband delivered over copper telephone lines."],
+["EAP","Extensible Authentication Protocol","A framework for authentication methods, often with 802.1X."],
+["ECB","Electronic Code Book","Weak mode: identical plaintext blocks make identical, visible ciphertext."],
+["ECC","Elliptic Curve Cryptography","Comparable security to RSA with smaller key sizes."],
+["ECDHE","Elliptic Curve Diffie-Hellman Ephemeral","Temporary elliptic-curve keys providing forward secrecy."],
+["ECDSA","Elliptic Curve Digital Signature Algorithm","Elliptic-curve based signatures for integrity and non-repudiation."],
+["EDR","Endpoint Detection and Response","Endpoint telemetry plus investigation and response actions."],
+["EFS","Encrypted File System","Windows feature that encrypts files or folders."],
+["ERP","Enterprise Resource Planning","Integrated platform managing finance, inventory, HR, and more."],
+["ESN","Electronic Serial Number","Legacy CDMA device identifier; modern devices usually use IMEI."],
+["ESP","Encapsulated Security Payload","IPsec confidentiality; AH does not encrypt."],
+["FACL","File System Access Control List","Permission entries controlling file system access."],
+["FDE","Full Disk Encryption","Protects data at rest, not files already accessible after login."],
+["FIM","File Integrity Monitoring","Detects unexpected changes via baseline hash comparisons."],
+["FPGA","Field Programmable Gate Array","Hardware reconfigured after manufacture for custom functions."],
+["FRR","False Rejection Rate","Biometric usability problem: rejecting an authorized person."],
+["FTP","File Transfer Protocol","Sends credentials and data unencrypted; use SFTP or FTPS instead."],
+["FTPS","Secured File Transfer Protocol","FTP secured with TLS, distinct from SSH-based SFTP."],
+["GCM","Galois Counter Mode","Authenticated encryption providing confidentiality and integrity."],
+["GDPR","General Data Protection Regulation","EU/EEA personal data protection with data-subject rights."],
+["GPG","Gnu Privacy Guard","Command-line OpenPGP encryption and signing implementation."],
+["GPO","Group Policy Object","Centralized Windows/Active Directory configuration enforcement."],
+["GPS","Global Positioning System","Satellite-based location, navigation, and timing."],
+["GPU","Graphics Processing Unit","Parallel processing, often used to accelerate password cracking."],
+["GRE","Generic Routing Encapsulation","Tunnels many protocol types but provides no encryption alone."],
+["HA","High Availability","Redundancy and failover to minimize service interruption."],
+["HDD","Hard Disk Drive","Traditional spinning magnetic storage media."],
+["HIDS","Host-based Intrusion Detection System","Host visibility and alerting without automatic blocking."],
+["HIPS","Host-based Intrusion Prevention System","Host-based monitoring that actively blocks suspicious activity."],
+["HMAC","Hashed Message Authentication Code","A keyed hash verifying integrity and authenticity together."],
+["HOTP","HMAC-based One-time Password","Counter or event-based one-time codes; TOTP is time-based."],
+["HSM","Hardware Security Module","Tamper-resistant device generating and storing crypto keys."],
+["HTML","Hypertext Markup Language","Structures web page content; CSS styles it, JavaScript adds behavior."],
+["HTTP","Hypertext Transfer Protocol","Plaintext web requests and responses; HTTPS adds TLS."],
+["HTTPS","Hypertext Transfer Protocol Secure","TLS-protected web traffic, normally TCP port 443."],
+["HVAC","Heating, Ventilation Air Conditioning","Data-center cooling and environmental control."],
+["IaaS","Infrastructure as a Service","Provider supplies VMs, storage, networking; customer manages the OS up."],
+["IaC","Infrastructure as Code","Version-controlled, repeatable infrastructure provisioning."],
+["IAM","Identity and Access Management","Manages identities, authentication, roles, and access lifecycle."],
+["ICMP","Internet Control Message Protocol","Ping, traceroute, and unreachable diagnostic messages."],
+["ICS","Industrial Control Systems","Controls manufacturing, energy, and water processes; overlaps OT."],
+["IDEA","International Data Encryption Algorithm","A legacy symmetric block cipher."],
+["IDF","Intermediate Distribution Frame","Floor-level telecom closet connecting to the main frame (MDF)."],
+["IdP","Identity Provider","Authenticates users and issues identity assertions in SSO/federation."],
+["IDS","Intrusion Detection System","Detects and alerts; an IPS also blocks inline."],
+["IEEE","Institute of Electrical and Electronics Engineers","Publishes the 802 family: 802.3 Ethernet, 802.11 wireless."],
+["IKE","Internet Key Exchange","Negotiates IPsec security associations and cryptographic keys."],
+["IM","Instant Messaging","Real-time chat, a vector for chat-based phishing."],
+["IMAP","Internet Message Access Protocol","Keeps mail synced on the server across devices, unlike POP."],
+["IoC","Indicators of Compromise","Observable evidence like malicious hashes, domains, or IPs."],
+["IoT","Internet of Things","Internet-connected smart devices, often shipped with weak defaults."],
+["IP","Internet Protocol","Logical addressing and routing beneath TCP and UDP."],
+["IPS","Intrusion Prevention System","Monitors traffic inline and can actively block attacks."],
+["IPSec","Internet Protocol Security","AH, ESP, IKE, transport or tunnel mode; commonly used for VPNs."],
+["IR","Incident Response","The operational process of handling a security incident."],
+["IRC","Internet Relay Chat","Older chat protocol sometimes abused for botnet command-and-control."],
+["IRP","Incident Response Plan","The written playbook for handling incidents."],
+["ISO","International Organization for Standardization","Publishes standards such as ISO/IEC 27001 for security management."],
+["ISP","Internet Service Provider","Provides the connection between a network and the internet."],
+["ISSO","Information Systems Security Officer","Role responsible for information systems security."],
+["IV","Initialization Vector","A unique starting value preventing predictable ciphertext; reuse weakens encryption."],
+["KDC","Key Distribution Center","Kerberos service issuing authentication tickets."],
+["KEK","Key Encryption Key","A key that encrypts or wraps another cryptographic key."],
+["L2TP","Layer 2 Tunneling Protocol","No built-in encryption; usually paired with IPsec for VPNs."],
+["LAN","Local Area Network","A network confined to one building or campus."],
+["LDAP","Lightweight Directory Access Protocol","Directory queries for users and groups, TCP 389; LDAPS adds TLS."],
+["LEAP","Lightweight Extensible Authentication Protocol","A proprietary, now-weak Cisco wireless authentication method."],
+["MaaS","Monitoring as a Service","Outsourced, ongoing security monitoring and alerting."],
+["MAC","Mandatory Access Control","A central authority enforces labels like Secret or Top Secret."],
+["MAC","Media Access Control","The Layer 2 hardware address used in switching and ARP."],
+["MAC","Message Authentication Code","A keyed integrity tag, not a network address."],
+["MAN","Metropolitan Area Network","A network spanning a city, larger than a LAN, smaller than a WAN."],
+["MBR","Master Boot Record","Legacy boot sector and partition table; limited to four primary partitions."],
+["MD5","Message Digest 5","A weak 128-bit hash; replace with SHA-2 or SHA-3."],
+["MDF","Main Distribution Frame","The building's primary telecom cross-connect; IDFs sit on each floor."],
+["MDM","Mobile Device Management","Policy, encryption, and remote wipe enforcement on mobile devices."],
+["MFA","Multifactor Authentication","Requires factors from at least two different categories."],
+["MFD","Multifunction Device","A shared office device combining print, scan, and copy functions."],
+["MFP","Multifunction Printer","A networked printer that also scans, copies, or faxes."],
+["ML","Machine Learning","Learns patterns from data; a subset of AI."],
+["MMS","Multimedia Message Service","Cellular messaging carrying photos, video, or audio."],
+["MOA","Memorandum of Agreement","Documents responsibilities and permitted activity between parties."],
+["MOU","Memorandum of Understanding","General cooperation intent, less binding than an SLA."],
+["MPLS","Multi-protocol Label Switching","Carrier-managed labeled WAN paths, not ordinary internet VPN routing."],
+["MSA","Master Service Agreement","A foundational contract documenting terms between organizations."],
+["MSCHAP","Microsoft Challenge Handshake Authentication Protocol","Microsoft's challenge-response method, often used inside PEAP."],
+["MSP","Managed Service Provider","Outsourced general IT management."],
+["MSSP","Managed Security Service Provider","Outsourced security operations such as SIEM and incident monitoring."],
+["MTBF","Mean Time Between Failures","Average uptime between failures of a repairable system."],
+["MTTF","Mean Time to Failure","Average lifetime before a non-repairable component fails."],
+["MTTR","Mean Time to Recover","Average time needed to restore service after failure."],
+["MTU","Maximum Transmission Unit","Largest frame payload an interface sends without fragmentation."],
+["NAC","Network Access Control","Posture checks, 802.1X, guest VLAN, and quarantine before network access."],
+["NAT","Network Address Translation","Translates addresses between private and public IPv4 space."],
+["NDA","Non-disclosure Agreement","Legally restricts disclosure of confidential information."],
+["NFC","Near Field Communication","Very short-range data exchange for payments, badges, or pairing."],
+["NGFW","Next-generation Firewall","Stateful filtering plus application awareness and integrated IPS."],
+["NIDS","Network-based Intrusion Detection System","Passive network monitoring and alerting."],
+["NIPS","Network-based Intrusion Prevention System","Inline network traffic inspection that can block attacks."],
+["NIST","National Institute of Standards & Technology","Publishes US federal cybersecurity guidance such as the CSF."],
+["NTFS","New Technology File System","Windows file system supporting permissions and encryption features."],
+["NTLM","New Technology LAN Manager","Legacy Windows authentication used when Kerberos is unavailable."],
+["NTP","Network Time Protocol","Synchronizes clocks for accurate logs, certificates, and Kerberos."],
+["OAUTH","Open Authorization","Delegated authorization without sharing a password; OIDC adds authentication."],
+["OCSP","Online Certificate Status Protocol","Real-time single-certificate status check; CRL is a downloaded list."],
+["OID","Object Identifier","A hierarchical numeric name for an object or attribute, e.g. in SNMP."],
+["OS","Operating System","Manages hardware, applications, memory, and user access."],
+["OSINT","Open-source Intelligence","Intelligence gathered from publicly available sources."],
+["OSPF","Open Shortest Path First","Link-state interior routing; BGP handles internet interdomain routing."],
+["OT","Operational Technology","Technology controlling physical processes and equipment."],
+["OTA","Over the Air","Wireless delivery of software, firmware, or configuration updates."],
+["OVAL","Open Vulnerability Assessment Language","Machine-readable vulnerability and configuration checks, often with SCAP."],
+["P12","PKCS #12","A password-protected file packaging a private key with its certificate chain."],
+["P2P","Peer to Peer","Endpoints share resources directly without a central server."],
+["PaaS","Platform as a Service","Provider manages infrastructure and runtime; customer deploys code."],
+["PAC","Proxy Auto Configuration","A script telling browsers which proxy handles a given URL."],
+["PAM","Privileged Access Management","Vaults, monitors, and rotates powerful admin credentials and sessions."],
+["PAM","Pluggable Authentication Modules","Modular Linux/Unix authentication framework under /etc/pam.d."],
+["PAP","Password Authentication Protocol","Sends credentials in cleartext; weaker than CHAP."],
+["PAT","Port Address Translation","Many private hosts share one public IP via port translation."],
+["PBKDF2","Password-based Key Derivation Function 2","Derives a password key using a salt and many iterations."],
+["PBX","Private Branch Exchange","Routes internal calls and connects them to external phone networks."],
+["PCAP","Packet Capture","Stored network packets, typically viewed in Wireshark."],
+["PCIDSS","Payment Card Industry Data Security Standard","An industry standard, not a law, protecting cardholder data."],
+["PDU","Power Distribution Unit","Supplies and monitors rack power outlets in a data center."],
+["PEAP","Protected Extensible Authentication Protocol","Wraps EAP inside a TLS tunnel for safer wireless authentication."],
+["PED","Personal Electronic Device","User-carried devices like phones, tablets, or smart watches."],
+["PEM","Privacy Enhanced Mail","A Base64 text format with BEGIN/END labels for certs and keys."],
+["PFS","Perfect Forward Secrecy","Temporary session keys prevent compromise of past sessions."],
+["PGP","Pretty Good Privacy","Encrypts and signs email or files via a web-of-trust model."],
+["PHI","Personal Health Information","Protected patient and medical information."],
+["PII","Personally Identifiable Information","Data that can identify or be linked to a specific person."],
+["PIV","Personal Identity Verification","Verifies identity or controls access to systems and resources."],
+["PKCS","Public Key Cryptography Standards","A family of standards for encryption, signatures, and key management."],
+["PKI","Public Key Infrastructure","The trust system of keys, certificates, CAs, and revocation."],
+["POP","Post Office Protocol","Traditionally downloads mail to one device and removes it, port 110."],
+["POTS","Plain Old Telephone Service","Legacy analog voice over copper telephone lines."],
+["PPP","Point-to-Point Protocol","Data-link protocol historically used for dial-up connections."],
+["PPTP","Point-to-Point Tunneling Protocol","An early, now-insecure VPN tunneling protocol."],
+["PSK","Pre-shared Key","A shared secret configured on both ends; scales poorly for many users."],
+["PTZ","Pan-tilt-zoom","A camera that can rotate, tilt, and magnify a view remotely."],
+["PUP","Potentially Unwanted Program","Not always malicious but intrusive or deceptively bundled software."],
+["RA","Recovery Agent","An authorized account that can recover encrypted data via key escrow."],
+["RA","Registration Authority","Verifies identity before a CA issues a certificate."],
+["RACE","Research and Development in Advanced Communications Technologies in Europe","A European research program advancing broadband communications standards."],
+["RAD","Rapid Application Development","Prototyping and fast iteration with less upfront design."],
+["RADIUS","Remote Authentication Dial-in User Service","Centralized AAA for network access like Wi-Fi, VPN, or 802.1X."],
+["RAID","Redundant Array of Inexpensive Disks","Combines disks for performance or fault tolerance, not backup."],
+["RAS","Remote Access Server","Verifies identity and controls remote access to resources."],
+["RAT","Remote Access Trojan","Malware giving an attacker covert remote control of a system."],
+["RBAC","Role-based Access Control","Permissions assigned to job roles, e.g. HR or accountant."],
+["RBAC","Rule-based Access Control","System-wide conditional rules such as time or location."],
+["RC4","Rivest Cipher version 4","A legacy stream cipher, now considered weak."],
+["RDP","Remote Desktop Protocol","Windows remote GUI access, typically TCP 3389."],
+["RFID","Radio Frequency Identifier","Radio-wave tags identifying or tracking objects, cards, or assets."],
+["RIPEMD","RACE Integrity Primitives Evaluation Message Digest","A cryptographic hash function used for integrity checking."],
+["ROI","Return on Investment","Compares a control's financial benefit against its cost."],
+["RPO","Recovery Point Objective","Maximum acceptable data loss measured in time; RTO measures downtime."],
+["RSA","Rivest, Shamir, & Adleman","Public/private key pair algorithm; large keys distinguish it from ECC."],
+["RTBH","Remotely Triggered Black Hole","Routes attack traffic to a null destination during a major DDoS."],
+["RTO","Recovery Time Objective","Maximum acceptable downtime before service is restored."],
+["RTOS","Real-time Operating System","Predictable, deterministic timing for embedded control devices."],
+["RTP","Real-time Transport Protocol","Delivers real-time audio/video for VoIP; SRTP adds encryption."],
+["SaaS","Software as a Service","Provider runs the whole app; customer manages users and data."],
+["SAE","Simultaneous Authentication of Equals","WPA3-Personal's password key exchange, replacing the WPA2 PSK handshake."],
+["SAML","Security Assertions Markup Language","Signed XML assertions enabling federated SSO."],
+["SAN","Storage Area Network","Shared block-level storage over a dedicated high-speed network."],
+["SAN","Subject Alternative Name","Certificate field listing additional valid hostnames."],
+["SASE","Secure Access Service Edge","Cloud-delivered networking and security, combining SD-WAN, SWG, CASB, and zero trust."],
+["SCADA","Supervisory Control and Data Acquisition","Supervises distributed industrial processes and critical infrastructure."],
+["SCAP","Security Content Automation Protocol","Standardizes automated vulnerability and configuration scanning content."],
+["SCEP","Simple Certificate Enrollment Protocol","Automates certificate enrollment for network devices."],
+["SD-WAN","Software-defined Wide Area Network","Centrally manages WAN paths across broadband and MPLS links."],
+["SDK","Software Development Kit","Libraries, docs, and tools for building on a platform or API."],
+["SDLC","Software Development Lifecycle","Organizes requirements through maintenance of software; secure SDLC builds in security."],
+["SDN","Software-defined Networking","Separates centralized control logic from packet-forwarding devices."],
+["SELinux","Security-enhanced Linux","Mandatory access-control labels and policies restricting Linux processes."],
+["SED","Self-encrypting Drives","Storage drives that encrypt data at the hardware level."],
+["SEH","Structured Exception Handler","Windows exception handling, sometimes abused in memory exploitation."],
+["SFTP","SSH File Transfer Protocol","Secure file transfer over SSH, typically TCP 22."],
+["SHA","Secure Hashing Algorithm","Fixed-length digest for integrity; use SHA-2 or SHA-3."],
+["SHTTP","Secure Hypertext Transfer Protocol","Secured individual HTTP messages, distinct from session-level HTTPS."],
+["SIEM","Security Information and Event Management","Centralizes and correlates logs across multiple sources for alerting."],
+["SIM","Subscriber Identity Module","Identifies a subscriber's identity on a cellular network."],
+["SLA","Service-level Agreement","Measurable service targets like uptime and response time, with remedies."],
+["SLE","Single Loss Expectancy","SLE = asset value x exposure factor; ALE adds annual frequency."],
+["SMS","Short Message Service","Cellular text messaging; smishing is SMS-based phishing."],
+["SMTP","Simple Mail Transfer Protocol","Sends and relays outgoing email; IMAP/POP retrieve it."],
+["SMTPS","Simple Mail Transfer Protocol Secure","SMTP wrapped in TLS, typically port 465."],
+["SNMP","Simple Network Management Protocol","Monitors and manages devices; older versions send plaintext community strings."],
+["SOAP","Simple Object Access Protocol","XML-based messaging for structured web service communication."],
+["SOAR","Security Orchestration, Automation, and Response","Automates security workflows across tools using playbooks."],
+["SoC","System on Chip","Integrates processors, memory, and interfaces on one chip."],
+["SOC","Security Operations Center","A team continuously monitoring, investigating, and responding to threats."],
+["SOW","Statement of Work","Documents responsibilities, expectations, and permitted activity for a project."],
+["SPF","Sender Policy Framework","A DNS record listing servers allowed to send mail for a domain."],
+["SPIM","Spam over Internet Messaging","Spam delivered through instant-messaging platforms."],
+["SQL","Structured Query Language","Creates, retrieves, updates, and deletes data in relational databases."],
+["SQLi","SQL Injection","Injecting database commands through unsafe input; parameterized queries mitigate it."],
+["SRTP","Secure Real-Time Protocol","Adds encryption and authentication to real-time audio/video streams."],
+["SSD","Solid State Drive","Flash-based storage with no moving parts."],
+["SSH","Secure Shell","Encrypted remote command-line access, typically TCP 22; replaces Telnet."],
+["SSL","Secure Sockets Layer","A deprecated predecessor to TLS."],
+["SSO","Single Sign-on","One login grants access to multiple connected applications."],
+["STIX","Structured Threat Information eXchange","A machine-readable format for threat intelligence; TAXII transports it."],
+["SWG","Secure Web Gateway","Filters and controls outbound web traffic and enforces acceptable use."],
+["TACACS+","Terminal Access Controller Access-Control System Plus","Separates AAA functions and encrypts the full packet for device administration."],
+["TAXII","Trusted Automated eXchange of Indicator Information","Transports threat intelligence; STIX defines the data format."],
+["TCP/IP","Transmission Control Protocol/Internet Protocol","The foundational protocol suite of the modern internet."],
+["TGT","Ticket Granting Ticket","Kerberos's reusable initial ticket after authentication."],
+["TKIP","Temporal Key Integrity Protocol","Legacy WPA encryption, weaker than modern AES/CCMP."],
+["TLS","Transport Layer Security","Modern encrypted transport for sessions like HTTPS; SSL is obsolete."],
+["TOC","Time-of-check","The first half of a TOC/TOU race-condition vulnerability."],
+["TOTP","Time-based One-time Password","Codes changing every 30-60 seconds; HOTP is counter-based."],
+["TOU","Time-of-use","The second half of a TOC/TOU race condition after state changes."],
+["TPM","Trusted Platform Module","A motherboard chip protecting keys and supporting secure boot."],
+["TTP","Tactics, Techniques, and Procedures","Behavioral attack patterns; IoCs are the observable artifacts."],
+["TSIG","Transaction Signature","Cryptographically authenticates DNS zone transfer transactions."],
+["UAT","User Acceptance Testing","End users verify a system meets requirements before release."],
+["UAV","Unmanned Aerial Vehicle","A remotely or autonomously operated drone aircraft."],
+["UDP","User Datagram Protocol","Connectionless, low-overhead delivery; TCP guarantees order and delivery."],
+["UEFI","Unified Extensible Firmware Interface","Modern firmware supporting GPT and Secure Boot, replacing BIOS."],
+["UEM","Unified Endpoint Management","Manages laptops, desktops, and phones from one platform, broader than MDM."],
+["UPS","Uninterruptible Power Supply","Short-term battery power and conditioning for graceful shutdown."],
+["URI","Uniform Resource Identifier","Identifies a resource by name or location; URL is one type of URI."],
+["URL","Uniform Resource Locator","A web address specifying scheme, host, and path."],
+["USB","Universal Serial Bus","Connects peripherals; also a vector for malware and data theft."],
+["USBOTG","USB On the Go","Lets a mobile device act as either a USB host or peripheral."],
+["UTM","Unified Threat Management","An all-in-one appliance combining firewall, IDS/IPS, and filtering."],
+["UTP","Unshielded Twisted Pair","Common Cat5e/Cat6 Ethernet cabling without shielding."],
+["VBA","Visual Basic","Office macro scripting language, often abused in malicious documents."],
+["VDI","Virtual Desktop Infrastructure","Delivers and secures virtualized desktop environments."],
+["VLAN","Virtual Local Area Network","Logically separates Layer 2 broadcast domains via 802.1Q trunks."],
+["VLSM","Variable Length Subnet Masking","Divides an address range into differently sized subnets."],
+["VM","Virtual Machine","An isolated guest OS running on virtualized hardware."],
+["VoIP","Voice over IP","Carries voice calls as packets over IP instead of analog lines."],
+["VPC","Virtual Private Cloud","A logically isolated virtual network within a public cloud."],
+["VPN","Virtual Private Network","An encrypted tunnel across an untrusted network."],
+["VTC","Video Teleconferencing","Live two-way video meetings needing secure signaling and media."],
+["WAF","Web Application Firewall","Layer 7 protection blocking web attacks like SQLi and XSS."],
+["WAP","Wireless Access Point","Gives wireless clients access to a wired network."],
+["WEP","Wired Equivalent Privacy","Obsolete, easily broken Wi-Fi security using weak IVs and RC4."],
+["WIDS","Wireless Intrusion Detection System","Detects rogue APs and suspicious wireless activity without blocking."],
+["WIPS","Wireless Intrusion Prevention System","Actively blocks or contains detected wireless threats."],
+["WO","Work Order","Documents responsibilities and permitted activity for a task."],
+["WPA","Wi-Fi Protected Access","Improved Wi-Fi security over WEP; WPA2/WPA3 are stronger successors."],
+["WPS","Wi-Fi Protected Setup","Simplified Wi-Fi pairing; PIN mode is brute-forceable."],
+["WTLS","Wireless TLS","A TLS adaptation for older constrained wireless applications."],
+["XDR","Extended Detection and Response","Cross-domain telemetry correlation beyond endpoint-focused EDR."],
+["XML","Extensible Markup Language","Tagged structured data, used in SAML assertions and configs."],
+["XOR","Exclusive Or","Outputs true when compared bits differ; a crypto building block, not secure alone."],
+["XSRF","Cross-site Request Forgery","Another name for CSRF: tricking a logged-in browser into a request."],
+["XSS","Cross-site Scripting","Injected script runs in another user's browser; encode output to prevent it."]
+];
+/* Per-entry classification into the 5 main SY0-701 domains, same order/length as ACR_RAW,
+   based on official exam objectives (e.g. RADIUS/wireless auth -> 4.0 Ops, PKI/hashing -> 1.0 GSC,
+   routing/firewalls/cloud models -> 3.0 Architecture, malware/attack behavior -> 2.0 TVM,
+   agreements/roles/risk formulas -> 5.0 Governance). */
+const ACR_DOMAIN_CODES = ["gsc","ops","gsc","gsc","arch","ops","tvm","gov","arch","arch","tvm","gov","arch","tvm","tvm","gov","ops","ops","arch","arch","gov","arch","gov","arch","ops","gsc","tvm","gov","arch","gsc","ops","gsc","ops","gsc","ops","gsc","gov","ops","arch","arch","ops","arch","gsc","gsc","gov","arch","gsc","tvm","arch","gsc","gov","ops","ops","ops","ops","gov","tvm","tvm","gsc","arch","gsc","ops","tvm","ops","ops","arch","arch","tvm","gov","arch","gsc","arch","ops","gsc","gsc","gsc","gsc","ops","arch","arch","arch","arch","ops","arch","ops","arch","ops","arch","ops","gsc","gov","gsc","ops","arch","arch","arch","arch","arch","arch","arch","gsc","ops","gsc","arch","arch","ops","arch","arch","arch","ops","arch","arch","gsc","arch","ops","arch","arch","arch","tvm","arch","tvm","arch","arch","arch","arch","ops","tvm","ops","gov","arch","gov","gsc","ops","gsc","arch","arch","ops","ops","ops","ops","arch","gsc","arch","arch","gsc","arch","ops","ops","arch","arch","ops","arch","gov","gov","arch","gov","ops","gov","gov","gov","gov","gov","arch","ops","arch","gov","arch","arch","arch","arch","gov","arch","ops","arch","ops","gsc","gsc","arch","tvm","arch","arch","arch","ops","gsc","arch","arch","arch","ops","ops","ops","arch","gsc","arch","ops","gov","arch","ops","ops","gsc","gsc","gsc","gov","gov","ops","gsc","gsc","arch","arch","arch","arch","ops","gsc","tvm","gsc","gsc","gsc","gov","ops","arch","ops","tvm","ops","ops","gsc","ops","arch","gsc","gov","gov","gsc","tvm","gov","arch","arch","arch","ops","ops","arch","gsc","arch","arch","ops","gsc","arch","arch","ops","arch","ops","arch","tvm","ops","gsc","ops","ops","ops","gov","gov","tvm","arch","ops","ops","arch","ops","arch","ops","gov","ops","tvm","arch","tvm","ops","arch","ops","gsc","ops","tvm","ops","ops","tvm","arch","ops","ops","gsc","tvm","ops","tvm","gsc","tvm","gsc","gsc","arch","arch","arch","ops","arch","arch","tvm","tvm","arch","arch","arch","tvm","arch","arch","arch","arch","arch","arch","arch","arch","arch","arch","ops","ops","ops","gov","ops","ops","gsc","ops","arch","gsc","tvm","tvm"];
+const ACR_TERMS = ACR_RAW.map(([a,e,c],i)=>({id:"acr"+i, domain:ACR_DOMAIN_CODES[i], term:a, def:e, clue:c}));
+const DATA_ACR_COUNT = ACR_TERMS.length;
+
+const TERMS = [...PBQ_RAW, ...ACR_TERMS];
+
+const JEOPARDY_MAIN = [
+  {label:"General Security Concepts", domains:["gsc"]},
+  {label:"Threats & Vulnerabilities", domains:["tvm"]},
+  {label:"Security Architecture", domains:["arch"]},
+  {label:"Security Operations", domains:["ops"]},
+  {label:"Program Mgmt & Oversight", domains:["gov"]}
+];
+const JEOPARDY_PBQ = [
+  {label:"AI & Zero Trust", domains:["rag","zta"]},
+  {label:"Crypto & Hardening", domains:["pki","lnx","hard"]},
+  {label:"Continuity & Response", domains:["bcdr","ir"]},
+  {label:"Detection & Logs", domains:["siem","ids","log"]},
+  {label:"Network & Access", domains:["acl","fw","netdiag","subnet","wifi"]}
+];
+
+/* ---- ordering scenarios ---- */
+const SEQUENCES = [
+  {id:"ir", title:"IR Phases (PICERL)", steps:[
+    "Preparation","Identification","Containment","Eradication","Recovery","Lessons Learned"
+  ]},
+  {id:"bcdr", title:"BCDR Recovery Steps", steps:[
+    "Declare the disaster and activate the DR plan",
+    "Notify stakeholders and assemble the response team",
+    "Assess damage and business impact",
+    "Fail over to the DR site for priority systems",
+    "Restore data from backup within the RPO window",
+    "Validate system and application functionality",
+    "Resume normal operations (failback)",
+    "Conduct a post-incident review and update the plan"
+  ]},
+  {id:"pki", title:"PKI Certificate Chain Build", steps:[
+    "Generate and self-sign the offline Root CA certificate",
+    "Issue an Intermediate CA certificate signed by the Root",
+    "Issue the leaf certificate signed by the Intermediate",
+    "Validate the chain by checking CRL/OCSP status at each link"
+  ]},
+  {id:"lnx", title:"Linux Breach Response Order", steps:[
+    "Isolate the compromised host from the network",
+    "Preserve evidence and logs before making changes",
+    "Rotate all potentially exposed credentials",
+    "Patch or remove the vulnerable service",
+    "Harden sshd_config (disable root login, key-only auth)",
+    "Configure fail2ban to block brute-force attempts",
+    "Set UFW to default-deny and allow only required ports",
+    "Verify hardening and monitor logs for further attempts"
+  ]},
+  {id:"siem", title:"Ransomware Attack Kill Chain", steps:[
+    "Initial Access","Execution","Persistence","Privilege Escalation",
+    "Lateral Movement","Collection","Exfiltration","Impact (Encryption)"
+  ]}
+];
+
+/* ---- placement scenarios ---- */
+const PLACEMENTS = [
+  {id:"zta", title:"Zero Trust Control Placement",
+   zones:["Untrusted Public Internet","Policy Enforcement Point (Edge)","Segmented Internal Network","Privileged Resource Tier"],
+   items:[
+     {name:"ZTNA Gateway", zone:"Policy Enforcement Point (Edge)"},
+     {name:"CASB", zone:"Policy Enforcement Point (Edge)"},
+     {name:"Continuous Authentication", zone:"Policy Enforcement Point (Edge)"},
+     {name:"Micro-segmentation", zone:"Segmented Internal Network"},
+     {name:"PAM", zone:"Privileged Resource Tier"},
+     {name:"JIT Access", zone:"Privileged Resource Tier"}
+   ]},
+  {id:"netdiag", title:"Network Security Diagram Placement",
+   zones:["Internet Edge / Perimeter","DMZ","Internal Network","SOC / Monitoring"],
+   items:[
+     {name:"Firewall", zone:"Internet Edge / Perimeter"},
+     {name:"WAF", zone:"DMZ"},
+     {name:"NAC", zone:"Internal Network"},
+     {name:"IDS", zone:"Internal Network"},
+     {name:"DLP", zone:"Internal Network"},
+     {name:"SIEM", zone:"SOC / Monitoring"}
+   ]},
+  {id:"ids", title:"IDS/IPS Alert Classification",
+   zones:["True Positive","False Positive","False Negative","True Negative"],
+   items:[
+     {name:"IDS alerts on a port scan from an external IP later confirmed as a real attacker", zone:"True Positive"},
+     {name:"IDS alerts every night when the scheduled backup job runs, which is normal traffic", zone:"False Positive"},
+     {name:"Ransomware encrypts files for two hours before any alert ever fires", zone:"False Negative"},
+     {name:"No alert fires during a normal, authorized software update", zone:"True Negative"},
+     {name:"Antivirus correctly flags a known-malicious file hash", zone:"True Positive"},
+     {name:"A vulnerability scan your team authorized triggers dozens of alerts", zone:"False Positive"}
+   ]},
+  {id:"log", title:"Security Log Host Classification",
+   zones:["Malware Origin (Patient Zero)","Infected via Lateral Movement","Clean Workstation"],
+   items:[
+     {name:"Host-A: opened a phishing attachment at 9:02 AM, began scanning the subnet at 9:05 AM", zone:"Malware Origin (Patient Zero)"},
+     {name:"Host-B: received a connection from Host-A at 9:07 AM, then began beaconing to an external IP", zone:"Infected via Lateral Movement"},
+     {name:"Host-C: got a connection attempt from Host-A at 9:06 AM but it was refused; nothing else unusual", zone:"Clean Workstation"},
+     {name:"Host-D: normal login and logoff pattern all day, no unusual outbound traffic", zone:"Clean Workstation"}
+   ]},
+  {id:"acl", title:"Firewall Traffic Decisions (Least Privilege)",
+   zones:["Allow","Deny"],
+   items:[
+     {name:"Inbound TCP 443 from the internet to the public web server", zone:"Allow"},
+     {name:"Inbound TCP 3306 (MySQL) from the internet directly to the database server", zone:"Deny"},
+     {name:"Inbound TCP 3306 from the application server's specific IP to the database server", zone:"Allow"},
+     {name:"Inbound TCP 23 (Telnet) from anywhere to any internal host", zone:"Deny"},
+     {name:"Inbound TCP 80 from the internet to the public web server", zone:"Allow"},
+     {name:"Any traffic not explicitly matched by a rule above", zone:"Deny"}
+   ]},
+  {id:"subnet", title:"VLSM Department Assignment",
+   zones:["/26 (62 hosts)","/27 (30 hosts)","/28 (14 hosts)","/30 (2 hosts)"],
+   items:[
+     {name:"Sales department — 50 users", zone:"/26 (62 hosts)"},
+     {name:"Engineering department — 25 users", zone:"/27 (30 hosts)"},
+     {name:"Front desk / reception — 8 devices", zone:"/28 (14 hosts)"},
+     {name:"Router-to-router WAN link", zone:"/30 (2 hosts)"}
+   ]}
+];
+
+function pick(arr,n){const copy=arr.slice();const out=[];while(out.length<n && copy.length){const i=Math.floor(Math.random()*copy.length);out.push(copy.splice(i,1)[0]);}return out;}
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ============ APP SHELL ============ */
+const app = document.getElementById('app');
+let state = { view:'home', domain:'all' };
+let teardownFn=null;
+function teardown(){ if(teardownFn){teardownFn();teardownFn=null;} }
+
+/* ============ THEME / CUSTOMIZATION ============ */
+const THEME_PRESETS = [
+  {name:"Signal Cyan",  accent:"#57c7d4", ok:"#8bd17c", danger:"#ef5a68", warn:"#e8b34c"},
+  {name:"Terminal Amber", accent:"#e8a94c", ok:"#4fd1c5", danger:"#e2545a", warn:"#f2c14e"},
+  {name:"Neon Violet",  accent:"#b18cff", ok:"#7fe0a7", danger:"#ff6b8b", warn:"#ffd166"},
+  {name:"Crimson Ops",  accent:"#ff7a59", ok:"#57d38c", danger:"#ff4d4d", warn:"#ffb020"},
+  {name:"Matrix Green", accent:"#39ff6a", ok:"#7cffcb", danger:"#ff5c5c", warn:"#d9ff5c"}
+];
+let theme = { mode:"dark", ...THEME_PRESETS[0] };
+
+const DIFFICULTIES = {
+  easy:   {label:"Easy",         lives:5, timer:20, minTimer:14, strikes:5},
+  medium: {label:"Medium",       lives:3, timer:15, minTimer:8,  strikes:3},
+  hard:   {label:"Hard",         lives:2, timer:10, minTimer:6,  strikes:2},
+  sudden: {label:"Sudden Death", lives:1, timer:12, minTimer:12, strikes:1}
+};
+let difficulty = "medium";
+
+function applyTheme(){
+  document.body.classList.toggle('light', theme.mode==='light');
+  const root = document.documentElement.style;
+  root.setProperty('--accent', theme.accent);
+  root.setProperty('--ok', theme.ok);
+  root.setProperty('--danger', theme.danger);
+  root.setProperty('--warn', theme.warn);
+  root.setProperty('--accent-dim', `color-mix(in srgb, ${theme.accent} 45%, black)`);
+}
+function cssVar(name){
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
+function openSettings(){
+  const modal = document.createElement('div');
+  modal.className = 'clue-modal';
+  modal.innerHTML = `
+    <div class="settings-box">
+      <h3>Customize the console</h3>
+      <div class="sec-label">Mode</div>
+      <div class="mode-row">
+        <button id="modeDark" class="${theme.mode==='dark'?'active':''}">Dark</button>
+        <button id="modeLight" class="${theme.mode==='light'?'active':''}">Light</button>
+      </div>
+      <div class="sec-label">Difficulty (Multiple Choice &amp; Wheel of Fortune)</div>
+      <div class="mode-row" id="diffRow">
+        ${Object.entries(DIFFICULTIES).map(([k,d])=>`<button data-d="${k}" class="${difficulty===k?'active':''}">${d.label}</button>`).join('')}
+      </div>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:6px 0 0;">Sudden Death: one life, one strike — a single miss ends the run.</p>
+      <div class="sec-label">Presets</div>
+      <div class="swatch-row" id="swatchRow"></div>
+      <div class="sec-label">Custom colors</div>
+      <div class="color-row"><span>Accent (highlights, headers)</span><input type="color" id="cAccent" value="${theme.accent}"></div>
+      <div class="color-row"><span>Success (correct answers)</span><input type="color" id="cOk" value="${theme.ok}"></div>
+      <div class="color-row"><span>Danger (wrong answers)</span><input type="color" id="cDanger" value="${theme.danger}"></div>
+      <div class="color-row"><span>Values / scores</span><input type="color" id="cWarn" value="${theme.warn}"></div>
+      <div class="row-gap" style="margin-top:16px;">
+        <button class="btn primary" id="settingsClose">Done</button>
+        <button class="btn ghost" id="settingsReset">Reset to default</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const swatchRow = document.getElementById('swatchRow');
+  THEME_PRESETS.forEach(p=>{
+    const sw = document.createElement('div');
+    sw.className = 'swatch';
+    sw.title = p.name;
+    sw.style.background = p.accent;
+    sw.onclick = ()=>{ theme = { mode:theme.mode, ...p }; applyTheme(); refreshInputs(); };
+    swatchRow.appendChild(sw);
+  });
+  function refreshInputs(){
+    document.getElementById('cAccent').value = theme.accent;
+    document.getElementById('cOk').value = theme.ok;
+    document.getElementById('cDanger').value = theme.danger;
+    document.getElementById('cWarn').value = theme.warn;
+    document.getElementById('modeDark').classList.toggle('active', theme.mode==='dark');
+    document.getElementById('modeLight').classList.toggle('active', theme.mode==='light');
+    const grid = document.getElementById('wheelCanvas');
+    if(grid && typeof redrawWheelIfOpen==='function') redrawWheelIfOpen();
+  }
+  document.getElementById('modeDark').onclick=()=>{ theme.mode='dark'; applyTheme(); refreshInputs(); };
+  document.getElementById('modeLight').onclick=()=>{ theme.mode='light'; applyTheme(); refreshInputs(); };
+  document.querySelectorAll('#diffRow button').forEach(btn=>{
+    btn.onclick=()=>{ difficulty = btn.dataset.d; document.querySelectorAll('#diffRow button').forEach(b=>b.classList.toggle('active', b===btn)); };
+  });
+  document.getElementById('cAccent').oninput=e=>{ theme.accent=e.target.value; applyTheme(); redrawWheelIfOpen(); };
+  document.getElementById('cOk').oninput=e=>{ theme.ok=e.target.value; applyTheme(); redrawWheelIfOpen(); };
+  document.getElementById('cDanger').oninput=e=>{ theme.danger=e.target.value; applyTheme(); redrawWheelIfOpen(); };
+  document.getElementById('cWarn').oninput=e=>{ theme.warn=e.target.value; applyTheme(); redrawWheelIfOpen(); };
+  document.getElementById('settingsReset').onclick=()=>{
+    theme = { mode:"dark", ...THEME_PRESETS[0] }; difficulty = "medium"; applyTheme(); refreshInputs();
+    document.querySelectorAll('#diffRow button').forEach(b=>b.classList.toggle('active', b.dataset.d==='medium'));
+  };
+  document.getElementById('settingsClose').onclick=()=>{ document.body.removeChild(modal); };
+}
+let redrawWheelIfOpen = function(){}; // reassigned while the wheel view is mounted
+
+function head(title){
+  return `<div class="console-head">
+    <h1>SY0-701<span> // unified practice arcade</span></h1>
+    <div class="breadcrumb">${title==='home'?'':'<button id="homeBtn">&lt; back to console</button>'}<button class="gear-btn" id="settingsBtn">&#9881; customize</button></div>
+  </div>`;
+}
+function mountHeader(){
+  const b=document.getElementById('homeBtn');
+  if(b) b.onclick=()=>{teardown();state.view='home';render();};
+  const s=document.getElementById('settingsBtn');
+  if(s) s.onclick=openSettings;
+}
+
+function pool(){
+  return state.domain==='all' ? TERMS : TERMS.filter(t=>t.domain===state.domain);
+}
+
+function render(){
+  if(state.view==='home') return renderHome();
+  if(state.view==='mc') return renderMC();
+  if(state.view==='match') return renderMatch();
+  if(state.view==='wheel') return renderWheel();
+  if(state.view==='jeopardypick') return renderJeopardyPicker();
+  if(state.view==='jeopardy') return renderJeopardy(state.jeopardyMode==='pbq'?JEOPARDY_PBQ:JEOPARDY_MAIN, state.jeopardyMode==='pbq'?"PBQ Subdomains Board":"Main Domains Board");
+  if(state.view==='seqpick') return renderSeqPicker();
+  if(state.view==='seq') return renderSequence(state.seqId);
+  if(state.view==='placepick') return renderPlacePicker();
+  if(state.view==='place') return renderPlacement(state.placeId);
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  app.innerHTML = head('home') + `
+    <p class="intro">The 5 main SY0-701 exam domains and the 15 PBQ subdomains stay separate, on purpose — the
+    <b>${DATA_ACR_COUNT}</b>-acronym bank is classified into the 5 official exam domains (General Security Concepts,
+    Threats &amp; Vulnerabilities, Architecture, Operations, Governance), while Secure AI/RAG, Zero Trust, PKI, Linux
+    hardening, BCDR, SIEM, firewalls, IDS/IPS, incident response, log analysis, network diagrams, subnetting,
+    hardening, and wireless stay grouped as their own 15 PBQ subdomains. <b>${TERMS.length}</b> concepts total. Pick a
+    domain below (grouped by which set it belongs to), set difficulty and colors in <b>&#9881; customize</b>, and drill.</p>
+    <div class="domain-bar">
+      <span class="k">DOMAIN FILTER (Multiple Choice, Matching, Wheel):</span>
+      <select id="domainSel">
+        <option value="all">All domains</option>
+        <optgroup label="Main Exam Domains">
+          ${Object.entries(MAIN_DOMAINS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+        </optgroup>
+        <optgroup label="PBQ Subdomains">
+          ${Object.entries(PBQ_DOMAINS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+        </optgroup>
+      </select>
+      <span class="k">DIFFICULTY:</span>
+      <span style="color:var(--warn);font-family:var(--mono);">${DIFFICULTIES[difficulty].label}</span>
+      <button class="gear-btn" id="quickDiff">&#9881; change</button>
+    </div>
+    <div class="grid">
+      <div class="node" id="n-mc"><div class="tag">01 // SPEED DRILL</div><h2>Multiple Choice</h2>
+        <p>Beat the clock. Lives and timer scale with difficulty — try Sudden Death for one shot, one miss.</p>
+        <div class="stat-line">${DIFFICULTIES[difficulty].lives} lives · ${DIFFICULTIES[difficulty].timer}s per question</div></div>
+      <div class="node" id="n-match"><div class="tag">02 // RECALL</div><h2>Matching Game</h2>
+        <p>Flip tiles to pair each concept with its definition in the fewest moves.</p>
+        <div class="stat-line">up to 8 pairs · move counter</div></div>
+      <div class="node" id="n-wheel"><div class="tag">03 // LETTERS</div><h2>Wheel of Fortune</h2>
+        <p>Spin for a dollar value, then call letters to solve the concept's definition.</p>
+        <div class="stat-line">${DIFFICULTIES[difficulty].strikes} strike${DIFFICULTIES[difficulty].strikes===1?'':'s'} · solve to bank winnings</div></div>
+      <div class="node" id="n-jeopardy"><div class="tag">04 // BOARD</div><h2>Jeopardy</h2>
+        <p>Choose a Main Domains board or a PBQ Subdomains board — five categories each, kept separate.</p>
+        <div class="stat-line">2 boards · 25 clues each</div></div>
+      <div class="node" id="n-seq"><div class="tag">05 // SEQUENCE LAB</div><h2>Order the Steps</h2>
+        <p>Click concepts into the correct order: IR phases, DR recovery, PKI chain build, breach response, kill chain.</p>
+        <div class="stat-line">5 PBQ scenarios · position scoring</div></div>
+      <div class="node" id="n-place"><div class="tag">06 // PLACEMENT LAB</div><h2>Place the Controls</h2>
+        <p>Assign controls, alerts, hosts, or traffic to the correct zone or bucket.</p>
+        <div class="stat-line">6 PBQ scenarios · instant feedback</div></div>
+    </div>
+  `;
+  document.getElementById('domainSel').value = state.domain;
+  document.getElementById('domainSel').onchange=e=>{state.domain=e.target.value;};
+  document.getElementById('quickDiff').onclick=openSettings;
+  mountHeader();
+  document.getElementById('n-mc').onclick=()=>{state.view='mc';render();};
+  document.getElementById('n-match').onclick=()=>{state.view='match';render();};
+  document.getElementById('n-wheel').onclick=()=>{state.view='wheel';render();};
+  document.getElementById('n-jeopardy').onclick=()=>{state.view='jeopardypick';render();};
+  document.getElementById('n-seq').onclick=()=>{state.view='seqpick';render();};
+  document.getElementById('n-place').onclick=()=>{state.view='placepick';render();};
+}
+
+/* ============ 1. MULTIPLE CHOICE ============ */
+function renderMC(){
+  const src = pool();
+  const d0 = DIFFICULTIES[difficulty];
+  const mc = { score:0, lives:d0.lives, timeLeft:d0.timer, maxTime:d0.timer, timer:null, current:null, locked:false };
+
+  function newQuestion(){
+    mc.locked=false;
+    const correct = pick(src,1)[0];
+    const wrongs = pick(src.filter(d=>d.def!==correct.def), Math.min(3, src.length-1));
+    const options = shuffle([correct, ...wrongs]);
+    mc.current = { correct, options };
+    const df = DIFFICULTIES[difficulty];
+    mc.maxTime = Math.max(df.minTimer, df.timer - Math.floor(mc.score/5));
+    mc.timeLeft = mc.maxTime;
+    draw();
+    clearInterval(mc.timer);
+    mc.timer = setInterval(()=>{
+      mc.timeLeft -= 0.1;
+      if(mc.timeLeft<=0){ mc.timeLeft=0; clearInterval(mc.timer); resolve(null); }
+      updateBar();
+    },100);
+  }
+  function updateBar(){
+    const bar = document.getElementById('mcBar');
+    if(!bar) return;
+    const pct = Math.max(0,(mc.timeLeft/mc.maxTime)*100);
+    bar.style.width = pct+'%';
+    bar.style.background = pct<25? 'var(--danger)' : pct<55? 'var(--warn)' : 'var(--accent)';
+  }
+  function resolve(chosenIdx){
+    if(mc.locked) return;
+    mc.locked=true;
+    clearInterval(mc.timer);
+    const opts = document.querySelectorAll('.choice');
+    const correctIdx = mc.current.options.findIndex(o=>o.def===mc.current.correct.def);
+    const fb = document.getElementById('mcFeedback');
+    if(chosenIdx===correctIdx){
+      mc.score++;
+      opts[chosenIdx].classList.add('correct');
+      fb.textContent = 'Correct — '+mc.current.correct.term;
+      fb.className='feedback ok';
+    } else {
+      mc.lives--;
+      if(chosenIdx!==null) opts[chosenIdx].classList.add('wrong');
+      opts[correctIdx].classList.add('correct');
+      fb.textContent = (chosenIdx===null?'Time up — ':'Not quite — ')+mc.current.correct.term;
+      fb.className='feedback bad';
+    }
+    opts.forEach(o=>o.classList.add('disabled'));
+    updateHud();
+    setTimeout(()=>{ if(mc.lives<=0){ drawEnd(); } else { newQuestion(); } }, 1200);
+  }
+  function updateHud(){
+    document.getElementById('mcScore').textContent = mc.score;
+    const lv = document.getElementById('mcLives');
+    const totalLives = DIFFICULTIES[difficulty].lives;
+    if(lv){ lv.innerHTML=''; for(let i=0;i<totalLives;i++){ const d=document.createElement('div'); d.className='life'+(i<mc.lives?'':' dead'); lv.appendChild(d);} }
+  }
+  function draw(){
+    app.innerHTML = head('mc') + `
+      <div class="hud">
+        <span><span class="k">SCORE</span><span class="v" id="mcScore">${mc.score}</span></span>
+        <span class="k">DIFFICULTY</span><span class="v">${DIFFICULTIES[difficulty].label}</span>
+        <span class="k">LIVES</span><div class="lives" id="mcLives"></div>
+        <div class="timerbar-wrap"><div class="timerbar" id="mcBar"></div></div>
+      </div>
+      <div class="qcard">
+        <div class="sub">WHICH DEFINITION MATCHES THIS CONCEPT? (${DOMAINS[mc.current.correct.domain]})</div>
+        <div class="term">${mc.current.correct.term}</div>
+      </div>
+      <div class="choices" id="mcChoices"></div>
+      <div class="feedback" id="mcFeedback"></div>
+    `;
+    mountHeader(); updateHud(); updateBar();
+    const box = document.getElementById('mcChoices');
+    mc.current.options.forEach((o,i)=>{
+      const el = document.createElement('div'); el.className='choice'; el.textContent = o.def;
+      el.onclick=()=>resolve(i); box.appendChild(el);
+    });
+  }
+  function drawEnd(){
+    app.innerHTML = head('mc') + `
+      <div class="endscreen">
+        <div class="sub" style="font-family:var(--mono);color:var(--text-dim);">RUN COMPLETE</div>
+        <div class="big">${mc.score}</div>
+        <p style="color:var(--text-dim);">concepts identified before your lives ran out.</p>
+        <div class="row-gap" style="justify-content:center;margin-top:16px;">
+          <button class="btn primary" id="mcRestart">Run it again</button>
+          <button class="btn ghost" id="mcHome">Back to console</button>
+        </div>
+      </div>`;
+    mountHeader();
+    document.getElementById('mcRestart').onclick=()=>{mc.score=0;mc.lives=DIFFICULTIES[difficulty].lives;newQuestion();};
+    document.getElementById('mcHome').onclick=()=>{teardown();state.view='home';render();};
+  }
+  teardownFn = ()=>clearInterval(mc.timer);
+  if(src.length<4){ app.innerHTML = head('mc') + noticeInsufficient(); mountHeader(); return; }
+  newQuestion();
+}
+
+function noticeInsufficient(){
+  return `<div class="endscreen"><p style="color:var(--text-dim);">This domain doesn't have enough concepts for this drill — pick "All domains" or a broader domain on the home screen.</p></div>`;
+}
+
+/* ============ 2. MATCHING GAME ============ */
+function renderMatch(){
+  const src = pool();
+  const uniq = (()=>{const seen=new Set();return src.filter(d=>{if(seen.has(d.term))return false;seen.add(d.term);return true;});})();
+  const PAIR_COUNT = Math.max(2, Math.min(8, uniq.length));
+  const pairs = pick(uniq, PAIR_COUNT);
+  if(pairs.length<2){ app.innerHTML = head('match') + noticeInsufficient(); mountHeader(); return; }
+  let cards = [];
+  pairs.forEach(p=>{ cards.push({key:p.id, kind:'t', text:p.term}); cards.push({key:p.id, kind:'d', text:p.def}); });
+  cards = shuffle(cards).map((c,i)=>({...c, uid:i, open:false, matched:false}));
+  let openOnes = [], moves = 0, matchedPairs = 0, lock = false;
+
+  function draw(){
+    app.innerHTML = head('match') + `
+      <div class="hud">
+        <span><span class="k">MOVES</span><span class="v" id="mvCount">${moves}</span></span>
+        <span><span class="k">PAIRS</span><span class="v" id="mpCount">${matchedPairs}/${PAIR_COUNT}</span></span>
+      </div>
+      <div class="match-grid" id="matchGrid"></div>`;
+    mountHeader();
+    const grid = document.getElementById('matchGrid');
+    cards.forEach(c=>{
+      const el=document.createElement('div');
+      el.className='mcard hidden'+(c.kind==='t'?' term':'');
+      el.dataset.uid=c.uid; el.textContent='?';
+      el.onclick=()=>flip(c.uid);
+      grid.appendChild(el);
+    });
+  }
+  function refreshCard(c){
+    const el = document.querySelector(`.mcard[data-uid="${c.uid}"]`);
+    if(!el) return;
+    if(c.matched){ el.className='mcard matched'+(c.kind==='t'?' term':''); el.textContent=c.text; }
+    else if(c.open){ el.className='mcard'+(c.kind==='t'?' term':''); el.textContent=c.text; }
+    else { el.className='mcard hidden'+(c.kind==='t'?' term':''); el.textContent='?'; }
+  }
+  function flip(uid){
+    if(lock) return;
+    const c = cards.find(x=>x.uid===uid);
+    if(!c || c.open || c.matched) return;
+    c.open=true; refreshCard(c); openOnes.push(c);
+    if(openOnes.length===2){
+      moves++; document.getElementById('mvCount').textContent=moves; lock=true;
+      const [c1,c2]=openOnes;
+      if(c1.key===c2.key && c1.kind!==c2.kind){
+        c1.matched=true; c2.matched=true; matchedPairs++;
+        setTimeout(()=>{
+          refreshCard(c1); refreshCard(c2);
+          document.getElementById('mpCount').textContent=matchedPairs+'/'+PAIR_COUNT;
+          openOnes=[]; lock=false;
+          if(matchedPairs===PAIR_COUNT) setTimeout(drawWin,500);
+        },350);
+      } else {
+        [c1,c2].forEach(c=>{ const el=document.querySelector(`.mcard[data-uid="${c.uid}"]`); if(el) el.classList.add('wrongflash'); });
+        setTimeout(()=>{ c1.open=false; c2.open=false; refreshCard(c1); refreshCard(c2); openOnes=[]; lock=false; },700);
+      }
+    }
+  }
+  function drawWin(){
+    app.innerHTML = head('match') + `
+      <div class="endscreen">
+        <div class="sub" style="font-family:var(--mono);color:var(--text-dim);">BOARD CLEARED</div>
+        <div class="big">${moves}</div>
+        <p style="color:var(--text-dim);">moves to match all ${PAIR_COUNT} pairs.</p>
+        <div class="row-gap" style="justify-content:center;margin-top:16px;">
+          <button class="btn primary" id="mRestart">New board</button>
+          <button class="btn ghost" id="mHome">Back to console</button>
+        </div>
+      </div>`;
+    mountHeader();
+    document.getElementById('mRestart').onclick=()=>renderMatch();
+    document.getElementById('mHome').onclick=()=>{teardown();state.view='home';render();};
+  }
+  draw();
+}
+
+/* ============ 3. WHEEL OF FORTUNE ============ */
+function renderWheel(){
+  const src = pool();
+  if(src.length<1){ app.innerHTML = head('wheel') + noticeInsufficient(); mountHeader(); return; }
+  const SEGMENTS = [
+    {label:'$300',value:300},{label:'$500',value:500},{label:'$150',value:150},
+    {label:'BANKRUPT',value:'bankrupt'},{label:'$400',value:400},{label:'$250',value:250},
+    {label:'$600',value:600},{label:'LOSE A TURN',value:'lose'},{label:'$350',value:350},
+    {label:'$900',value:900},{label:'$200',value:200},{label:'$450',value:450}
+  ];
+  const w = { bank:0, round:0, strikes:0, spinning:false, spinValue:null, puzzle:null, guessed:new Set(), rotation:0 };
+
+  function newPuzzle(){ w.puzzle = pick(src,1)[0]; w.guessed = new Set(); w.round = 0; w.strikes = 0; w.spinValue = null; draw(); }
+  function phraseHtml(){
+    const letters = w.puzzle.def.toUpperCase();
+    return letters.split('').map(ch=>{
+      if(/[A-Z]/.test(ch)) return w.guessed.has(ch) ? ch : '_';
+      if(ch===' ') return '&nbsp;&nbsp;';
+      return ch;
+    }).join(' ');
+  }
+  function drawWheelCanvas(){
+    const canvas = document.getElementById('wheelCanvas'); if(!canvas) return;
+    const ctx = canvas.getContext('2d'); if(!ctx) return;
+    const cx=140, cy=140, r=130;
+    const panelC = cssVar('--panel') || '#101923';
+    const panel2C = cssVar('--panel-2') || '#0c141c';
+    const bgC = cssVar('--bg') || '#070c12';
+    const accentC = cssVar('--accent') || '#57c7d4';
+    const dangerC = cssVar('--danger') || '#ef5a68';
+    const warnC = cssVar('--warn') || '#e8b34c';
+    ctx.clearRect(0,0,280,280);
+    const n = SEGMENTS.length; const arc = (Math.PI*2)/n;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(w.rotation);
+    for(let i=0;i<n;i++){
+      const start = i*arc, end=start+arc;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,start,end); ctx.closePath();
+      const isSpecial = typeof SEGMENTS[i].value==='string';
+      ctx.fillStyle = i%2===0 ? panelC : panel2C;
+      ctx.fill(); ctx.strokeStyle = bgC; ctx.stroke();
+      ctx.save(); ctx.rotate(start+arc/2); ctx.textAlign='right';
+      ctx.fillStyle= isSpecial ? dangerC : accentC;
+      ctx.font = '11px ui-monospace, monospace';
+      ctx.fillText(SEGMENTS[i].label, r-8, 4);
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.fillStyle=warnC;
+    ctx.beginPath(); ctx.moveTo(cx+r+6,cy-10); ctx.lineTo(cx+r+6,cy+10); ctx.lineTo(cx+r-8,cy); ctx.closePath(); ctx.fill();
+  }
+  redrawWheelIfOpen = drawWheelCanvas;
+  function spin(){
+    if(w.spinning) return; w.spinning=true; document.getElementById('spinBtn').disabled=true;
+    const n=SEGMENTS.length; const targetIndex = Math.floor(Math.random()*n); const arc=(Math.PI*2)/n;
+    const targetAngle = (Math.PI*2*6) + (Math.PI*2 - (targetIndex*arc + arc/2));
+    const start = performance.now(); const duration = 3200; const from = w.rotation;
+    const delta = targetAngle - (from % (Math.PI*2));
+    function step(t){
+      const p = Math.min(1,(t-start)/duration); const eased = 1-Math.pow(1-p,3);
+      w.rotation = from + delta*eased; drawWheelCanvas();
+      if(p<1){ requestAnimationFrame(step); }
+      else { w.spinning=false; w.spinValue = SEGMENTS[targetIndex].value; landSpin(); }
+    }
+    requestAnimationFrame(step);
+  }
+  function landSpin(){
+    const status = document.getElementById('wheelStatus');
+    if(w.spinValue==='bankrupt'){
+      w.round=0; status.textContent='BANKRUPT — round winnings wiped. Spin again.'; status.className='feedback bad';
+      document.getElementById('spinBtn').disabled=false;
+    } else if(w.spinValue==='lose'){
+      status.textContent='LOSE A TURN — spin again.'; status.className='feedback bad';
+      document.getElementById('spinBtn').disabled=false;
+    } else {
+      status.textContent='Landed on $'+w.spinValue+' — call a letter.'; status.className='feedback ok';
+      enableKeyboard(true);
+    }
+  }
+  function enableKeyboard(on){
+    document.querySelectorAll('.kb button').forEach(b=>{ if(!b.classList.contains('hit') && !b.classList.contains('miss')) b.disabled=!on; });
+    document.getElementById('spinBtn').disabled = on;
+  }
+  function guessLetter(letter){
+    const btn = document.querySelector(`.kb button[data-l="${letter}"]`);
+    const phraseUp = w.puzzle.def.toUpperCase();
+    if(phraseUp.includes(letter)){
+      w.guessed.add(letter);
+      const count = phraseUp.split('').filter(ch=>ch===letter).length;
+      w.round += count * (typeof w.spinValue==='number'?w.spinValue:0);
+      btn.classList.add('hit');
+      document.getElementById('phraseDisplay').innerHTML = phraseHtml();
+      document.getElementById('roundVal').textContent = '$'+w.round;
+      document.getElementById('wheelStatus').textContent = 'Nice — '+count+' letter'+(count>1?'s':'')+' found. Spin again.';
+      document.getElementById('wheelStatus').className='feedback ok';
+      checkSolved();
+    } else {
+      btn.classList.add('miss'); w.strikes++; updateStrikes();
+      document.getElementById('wheelStatus').textContent = 'No '+letter+' in the definition.';
+      document.getElementById('wheelStatus').className='feedback bad';
+      if(w.strikes>=DIFFICULTIES[difficulty].strikes){ setTimeout(()=>revealAndEnd(false),700); return; }
+    }
+    enableKeyboard(false); btn.disabled=true;
+  }
+  function updateStrikes(){
+    const wrap = document.getElementById('strikeWrap'); wrap.innerHTML='';
+    const totalStrikes = DIFFICULTIES[difficulty].strikes;
+    for(let i=0;i<totalStrikes;i++){ const d=document.createElement('div'); d.className='strike'+(i<w.strikes?' on':''); d.textContent='X'; wrap.appendChild(d); }
+  }
+  function checkSolved(){
+    const letters = new Set(w.puzzle.def.toUpperCase().replace(/[^A-Z]/g,'').split(''));
+    const allGot = [...letters].every(l=>w.guessed.has(l));
+    if(allGot) revealAndEnd(true);
+  }
+  function trySolve(){
+    const val = document.getElementById('solveInput').value.trim().toLowerCase();
+    if(val && val===w.puzzle.def.toLowerCase()){ revealAndEnd(true); }
+    else { const status=document.getElementById('wheelStatus'); status.textContent='Not the definition — keep spinning.'; status.className='feedback bad'; }
+  }
+  function revealAndEnd(won){
+    if(won) w.bank += w.round;
+    app.innerHTML = head('wheel') + `
+      <div class="endscreen">
+        <div class="sub" style="font-family:var(--mono);color:var(--text-dim);">${won?'SOLVED':'OUT OF STRIKES'}</div>
+        <div class="phrase" style="font-size:15px;letter-spacing:1px;">${w.puzzle.term} = ${w.puzzle.def}</div>
+        <div class="big">$${w.bank}</div>
+        <p style="color:var(--text-dim);">total winnings banked</p>
+        <div class="row-gap" style="justify-content:center;margin-top:16px;">
+          <button class="btn primary" id="wNext">Next puzzle</button>
+          <button class="btn ghost" id="wHome">Back to console</button>
+        </div>
+      </div>`;
+    mountHeader();
+    document.getElementById('wNext').onclick=()=>newPuzzle();
+    document.getElementById('wHome').onclick=()=>{teardown();state.view='home';render();};
+  }
+  function draw(){
+    app.innerHTML = head('wheel') + `
+      <div class="hud">
+        <span><span class="k">BANK</span><span class="v">$${w.bank}</span></span>
+        <span><span class="k">ROUND</span><span class="v" id="roundVal">$${w.round}</span></span>
+        <span class="k">DIFFICULTY</span><span class="v">${DIFFICULTIES[difficulty].label}</span>
+        <span class="k">STRIKES</span><div class="strikes" id="strikeWrap"></div>
+      </div>
+      <div class="clue-hint">Guess the definition of: <b style="color:var(--accent)">${w.puzzle.term}</b> (${DOMAINS[w.puzzle.domain]})</div>
+      <div class="phrase" id="phraseDisplay">${phraseHtml()}</div>
+      <div class="wheel-wrap">
+        <canvas id="wheelCanvas" width="280" height="280"></canvas>
+        <div class="spin-col">
+          <button class="btn primary" id="spinBtn">Spin the wheel</button>
+          <div class="row-gap">
+            <input id="solveInput" placeholder="Solve the definition..." style="font-family:var(--mono);background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:8px 10px;font-size:13px;">
+            <button class="btn" id="solveBtn">Solve</button>
+          </div>
+        </div>
+      </div>
+      <div class="feedback" id="wheelStatus"></div>
+      <div class="kb" id="kb"></div>`;
+    mountHeader(); updateStrikes(); drawWheelCanvas();
+    document.getElementById('spinBtn').onclick=spin;
+    document.getElementById('solveBtn').onclick=trySolve;
+    const kb = document.getElementById('kb');
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(l=>{
+      const b=document.createElement('button'); b.textContent=l; b.dataset.l=l; b.disabled=true;
+      b.onclick=()=>guessLetter(l); kb.appendChild(b);
+    });
+  }
+  newPuzzle();
+}
+
+/* ============ 4. JEOPARDY ============ */
+function renderJeopardyPicker(){
+  app.innerHTML = head('jeopardypick') + `
+    <p class="intro">Pick a board. The two stay separate — one draws only from the 5 main SY0-701 exam domains
+    (built from the acronym bank), the other only from the 15 PBQ subdomains.</p>
+    <div class="grid">
+      <div class="node" id="jp-main"><div class="tag">5 CATEGORIES</div><h2>Main Domains Board</h2>
+        <p>General Security Concepts, Threats &amp; Vulnerabilities, Architecture, Operations, Governance.</p></div>
+      <div class="node" id="jp-pbq"><div class="tag">5 CATEGORIES</div><h2>PBQ Subdomains Board</h2>
+        <p>AI &amp; Zero Trust, Crypto &amp; Hardening, Continuity &amp; Response, Detection &amp; Logs, Network &amp; Access.</p></div>
+    </div>`;
+  mountHeader();
+  document.getElementById('jp-main').onclick=()=>{ state.jeopardyMode='main'; state.view='jeopardy'; render(); };
+  document.getElementById('jp-pbq').onclick=()=>{ state.jeopardyMode='pbq'; state.view='jeopardy'; render(); };
+}
+function renderJeopardy(groups, boardTitle){
+  const values = [100,200,300,400,500];
+  const board = groups.map(g=>{
+    const poolAll = TERMS.filter(d=>g.domains.includes(d.domain));
+    return { label:g.label, items: pick(poolAll, 5) };
+  });
+  let used = {}; let score = 0;
+
+  function cellKey(ci,vi){ return ci+'-'+vi; }
+  function draw(){
+    app.innerHTML = head('jeopardy') + `<div class="score-strip">${boardTitle} &middot; SCORE: $${score}</div><div id="boardWrap"></div>`;
+    mountHeader();
+    const wrap = document.getElementById('boardWrap');
+    const catRow = document.createElement('div');
+    catRow.className='jcat-row'; catRow.style.gridTemplateColumns=`repeat(${board.length},1fr)`;
+    board.forEach(col=>{ const c=document.createElement('div'); c.className='jcat'; c.textContent=col.label; catRow.appendChild(c); });
+    wrap.appendChild(catRow);
+    values.forEach((val,vi)=>{
+      const row=document.createElement('div'); row.className='jcat-row'; row.style.gridTemplateColumns=`repeat(${board.length},1fr)`;
+      board.forEach((col,ci)=>{
+        const cell=document.createElement('div'); const key=cellKey(ci,vi);
+        cell.className='jcell'+(used[key]?' used':''); cell.textContent='$'+val;
+        if(!used[key]) cell.onclick=()=>openClue(ci,vi,val);
+        row.appendChild(cell);
+      });
+      wrap.appendChild(row);
+    });
+  }
+  function openClue(ci,vi,val){
+    const item = board[ci].items[vi]; const key = cellKey(ci,vi);
+    const modal = document.createElement('div'); modal.className='clue-modal';
+    modal.innerHTML = `
+      <div class="clue-box">
+        <div class="cat">${board[ci].label} · $${val}</div>
+        <div class="cluetext">${item.clue||item.def}</div>
+        <input id="jAnswer" placeholder="Name the concept..." autocomplete="off">
+        <div class="answer-reveal" id="jReveal" style="display:none;">${item.term}</div>
+        <div class="row-gap">
+          <button class="btn primary" id="jSubmit">Submit</button>
+          <button class="btn" id="jReveal2">Reveal answer</button>
+          <button class="btn ghost" id="jClose">Close</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    const input = document.getElementById('jAnswer'); input.focus();
+    let answered=false;
+    function norm(s){ return s.trim().toLowerCase().replace(/[^a-z0-9]/g,''); }
+    function finish(correct){
+      if(answered) return; answered=true; used[key]=true;
+      if(correct) score += val; else score -= val;
+      document.getElementById('jReveal').style.display='block';
+      setTimeout(()=>{ document.body.removeChild(modal); draw(); }, correct?900:1600);
+    }
+    document.getElementById('jSubmit').onclick=()=>{
+      const v = norm(input.value);
+      const correct = v===norm(item.term) || v.length>3 && norm(item.term).includes(v) && v.length>=norm(item.term).length-2;
+      if(v===norm(item.term)){ finish(true); }
+      else {
+        input.style.borderColor='var(--danger)';
+        document.getElementById('jReveal').style.display='block';
+        document.getElementById('jReveal').style.color='var(--danger)';
+        setTimeout(()=>finish(false), 1400);
+      }
+    };
+    document.getElementById('jReveal2').onclick=()=>{ document.getElementById('jReveal').style.display='block'; };
+    document.getElementById('jClose').onclick=()=>{ used[key]=true; document.body.removeChild(modal); draw(); };
+    input.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('jSubmit').click(); });
+  }
+  draw();
+}
+
+/* ============ 5. SEQUENCE LAB ============ */
+function renderSeqPicker(){
+  app.innerHTML = head('seqpick') + `
+    <p class="intro">Pick a scenario. Click each step in the pool in the order you think it happens — you'll see how many landed in the right spot.</p>
+    <div class="grid">
+      ${SEQUENCES.map(s=>`<div class="node" data-id="${s.id}"><div class="tag">${s.steps.length} STEPS</div><h2>${s.title}</h2></div>`).join('')}
+    </div>`;
+  mountHeader();
+  document.querySelectorAll('.node').forEach(n=>{ n.onclick=()=>{ state.seqId=n.dataset.id; state.view='seq'; render(); }; });
+}
+function renderSequence(id){
+  const scenario = SEQUENCES.find(s=>s.id===id);
+  let poolItems = shuffle(scenario.steps.map((s,i)=>({text:s, correctIndex:i})));
+  let yourOrder = [];
+
+  function draw(){
+    app.innerHTML = head('seq') + `
+      <h2 style="font-family:var(--mono);font-size:16px;color:var(--accent);margin:0 0 4px;">${scenario.title}</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin:0 0 16px;">Click items below in what you believe is the correct order.</p>
+      <div class="seq-list" id="seqList"></div>
+      <div class="seq-pool" id="seqPool"></div>`;
+    mountHeader();
+    const listEl = document.getElementById('seqList');
+    yourOrder.forEach((it,i)=>{
+      const row=document.createElement('div'); row.className='seq-row';
+      row.innerHTML = `<span class="num">${i+1}.</span><span>${it.text}</span>`;
+      listEl.appendChild(row);
+    });
+    const poolEl = document.getElementById('seqPool');
+    poolItems.forEach((it,i)=>{
+      const chip=document.createElement('div'); chip.className='seq-chip'; chip.textContent=it.text;
+      chip.onclick=()=>{ yourOrder.push(it); poolItems.splice(i,1); if(poolItems.length===0){ setTimeout(finish,150); } else { draw(); } };
+      poolEl.appendChild(chip);
+    });
+  }
+  function finish(){
+    let correctCount=0;
+    app.innerHTML = head('seq') + `
+      <h2 style="font-family:var(--mono);font-size:16px;color:var(--accent);margin:0 0 4px;">${scenario.title} — results</h2>
+      <div class="seq-list" id="resultList"></div>
+      <div class="score-strip" id="seqScore" style="margin-top:16px;"></div>
+      <div class="row-gap">
+        <button class="btn primary" id="seqRetry">Try again</button>
+        <button class="btn" id="seqOther">Choose another scenario</button>
+        <button class="btn ghost" id="seqHome">Back to console</button>
+      </div>`;
+    mountHeader();
+    const rl = document.getElementById('resultList');
+    yourOrder.forEach((it,i)=>{
+      const ok = it.correctIndex===i;
+      if(ok) correctCount++;
+      const row=document.createElement('div'); row.className='seq-row '+(ok?'correct':'wrong');
+      row.innerHTML = `<span class="num">${i+1}.</span><span>${it.text}</span>` + (ok?'':`<span class="correction">correct position: ${it.correctIndex+1}</span>`);
+      rl.appendChild(row);
+    });
+    document.getElementById('seqScore').textContent = correctCount+' / '+scenario.steps.length+' in the correct position';
+    document.getElementById('seqRetry').onclick=()=>renderSequence(id);
+    document.getElementById('seqOther').onclick=()=>{ state.view='seqpick'; render(); };
+    document.getElementById('seqHome').onclick=()=>{ teardown(); state.view='home'; render(); };
+  }
+  draw();
+}
+
+/* ============ 6. PLACEMENT LAB ============ */
+function renderPlacePicker(){
+  app.innerHTML = head('placepick') + `
+    <p class="intro">Pick a scenario. Select an item, then click the zone or bucket you think it belongs in — feedback is immediate.</p>
+    <div class="grid">
+      ${PLACEMENTS.map(s=>`<div class="node" data-id="${s.id}"><div class="tag">${s.items.length} ITEMS · ${s.zones.length} ZONES</div><h2>${s.title}</h2></div>`).join('')}
+    </div>`;
+  mountHeader();
+  document.querySelectorAll('.node').forEach(n=>{ n.onclick=()=>{ state.placeId=n.dataset.id; state.view='place'; render(); }; });
+}
+function renderPlacement(id){
+  const scenario = PLACEMENTS.find(s=>s.id===id);
+  let poolItems = shuffle(scenario.items.slice());
+  let placedByZone = {}; scenario.zones.forEach(z=>placedByZone[z]=[]);
+  let selected = null; let correctCount=0; let mistakes=0;
+
+  function draw(){
+    app.innerHTML = head('place') + `
+      <h2 style="font-family:var(--mono);font-size:16px;color:var(--accent);margin:0 0 4px;">${scenario.title}</h2>
+      <p style="color:var(--text-dim);font-size:13px;margin:0 0 16px;">Select an item below, then click the zone it belongs in.</p>
+      <div class="hud"><span><span class="k">PLACED</span><span class="v" id="plScore">${correctCount}/${scenario.items.length}</span></span>
+      <span><span class="k">MISTAKES</span><span class="v" id="plMiss">${mistakes}</span></span></div>
+      <div class="zones" id="zonesWrap" style="grid-template-columns:repeat(${Math.min(scenario.zones.length,4)},1fr);"></div>
+      <div class="place-pool" id="placePool"></div>`;
+    mountHeader();
+    const zw = document.getElementById('zonesWrap');
+    scenario.zones.forEach(z=>{
+      const box=document.createElement('div'); box.className='zone-box'; box.dataset.zone=z;
+      box.innerHTML = `<div class="zone-title">${z}</div><div class="zone-items"></div>`;
+      const itemsEl = box.querySelector('.zone-items');
+      placedByZone[z].forEach(it=>{ const chip=document.createElement('div'); chip.className='placed-chip'; chip.textContent=it.name; itemsEl.appendChild(chip); });
+      box.onclick=()=>attemptPlace(z, box);
+      zw.appendChild(box);
+    });
+    const pp = document.getElementById('placePool');
+    poolItems.forEach((it,i)=>{
+      const chip=document.createElement('div'); chip.className='place-chip'+(selected===i?' selected':'');
+      chip.textContent=it.name;
+      chip.onclick=(e)=>{ e.stopPropagation(); selected = (selected===i)?null:i; draw(); };
+      pp.appendChild(chip);
+    });
+  }
+  function attemptPlace(zone, box){
+    if(selected===null) return;
+    const item = poolItems[selected];
+    if(item.zone===zone){
+      placedByZone[zone].push(item);
+      poolItems.splice(selected,1);
+      correctCount++; selected=null;
+      if(poolItems.length===0){ setTimeout(finish,300); } else { draw(); }
+    } else {
+      mistakes++;
+      box.classList.add('flash');
+      setTimeout(()=>box.classList.remove('flash'),450);
+      document.getElementById('plMiss').textContent = mistakes;
+      selected=null; draw();
+    }
+  }
+  function finish(){
+    app.innerHTML = head('place') + `
+      <div class="endscreen">
+        <div class="sub" style="font-family:var(--mono);color:var(--text-dim);">SCENARIO COMPLETE</div>
+        <div class="big">${correctCount}/${scenario.items.length}</div>
+        <p style="color:var(--text-dim);">placed correctly, with ${mistakes} mistake${mistakes===1?'':'s'} along the way.</p>
+        <div class="row-gap" style="justify-content:center;margin-top:16px;">
+          <button class="btn primary" id="plRetry">Try again</button>
+          <button class="btn" id="plOther">Choose another scenario</button>
+          <button class="btn ghost" id="plHome">Back to console</button>
+        </div>
+      </div>`;
+    mountHeader();
+    document.getElementById('plRetry').onclick=()=>renderPlacement(id);
+    document.getElementById('plOther').onclick=()=>{ state.view='placepick'; render(); };
+    document.getElementById('plHome').onclick=()=>{ teardown(); state.view='home'; render(); };
+  }
+  draw();
+}
+
+render();
+</script>
+</body>
+</html>
